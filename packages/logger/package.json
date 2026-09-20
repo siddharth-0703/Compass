@@ -1,0 +1,19 @@
+{
+  "name": "@rural/logger",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "pino": "^9.0.0",
+    "pino-http": "^10.0.0",
+    "uuid": "^14.0.1"
+  },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0",
+    "pino-pretty": "^11.0.0",
+    "typescript": "^5.2.2"
+  }
+}

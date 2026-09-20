@@ -1,0 +1,17 @@
+{
+  "name": "@rural/database",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "mongoose": "^8.0.0",
+    "@rural/types": "*",
+    "@rural/logger": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@rural/ai-core",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@google/genai": "latest",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

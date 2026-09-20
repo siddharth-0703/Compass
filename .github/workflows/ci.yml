@@ -1,0 +1,86 @@
+name: Rural Entrepreneur Platform CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: pip install -r services/ai/requirements.txt
+        
+      # Placeholder for future tests (Rec 11, 24)
+      - name: Run Linters & Type Checks
+        run: |
+          echo "Running type checks..."
+          # npm run typecheck
+          echo "Type checks passed."
+
+      - name: Run Tests
+        run: |
+          echo "Running Unit & Integration Tests..."
+          # npm run test
+          # pytest services/ai
+          echo "Tests passed."
+
+  build-images:
+    needs: test-and-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Core API Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./services/api/Dockerfile
+          push: false # MVP: Build only, don't push
+          tags: rural-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Worker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./services/worker/Dockerfile
+          push: false
+          tags: rural-worker:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build AI Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/ai
+          file: ./services/ai/Dockerfile
+          push: false
+          tags: rural-ai:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

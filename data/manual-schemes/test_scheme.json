@@ -1,0 +1,24 @@
+[
+  {
+    "schemeCode": "PMEGP-001",
+    "name": "Prime Minister's Employment Generation Programme (PMEGP)",
+    "shortDescription": "Credit-linked subsidy program for setting up new micro-enterprises.",
+    "category": "EMPLOYMENT",
+    "officialSourceUrl": "https://www.kviconline.gov.in/pmegpeportal/pmegphome/",
+    "eligibilityRules": [
+      {
+        "field": "age",
+        "operator": "GTE",
+        "value": 18,
+        "confidence": "EXACT"
+      },
+      {
+        "field": "education",
+        "operator": "EQ",
+        "value": "8th Pass",
+        "requiresReview": true,
+        "confidence": "AMBIGUOUS"
+      }
+    ]
+  }
+]

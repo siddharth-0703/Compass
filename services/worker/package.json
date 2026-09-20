@@ -1,0 +1,20 @@
+{
+  "name": "@rural/worker",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "ts-node-dev src/index.ts"
+  },
+  "dependencies": {
+    "bullmq": "^6.0.7",
+    "ioredis": "^5.3.2",
+    "next": "16.3.0",
+    "uuid": "14.0.1",
+    "@rural/logger": "*",
+    "@rural/database": "*",
+    "@rural/types": "*"
+  },
+  "devDependencies": {
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.2.2"
+  }
+}

@@ -18,7 +18,8 @@ export class SchemeRecommendationService {
   constructor() {
     this.schemeRepo = new SchemeRepository();
     this.resolutionService = new SchemeResolutionService();
-    this.redisClient = new Redis(process.env.REDIS_URI || process.env.REDIS_HOST ? `redis://${process.env.REDIS_HOST}:6379` : 'redis://localhost:6379');
+    this.redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { family: 0 });
+    this.redisClient.on('error', (err) => logger.error({ err }, 'Redis SchemeRecommender Error'));
 
     const apiKey = process.env.GOOGLE_GENAI_API_KEY;
     const useMock = process.env.ENABLE_AI_MOCK === 'true' || !apiKey || apiKey === 'mock-key';

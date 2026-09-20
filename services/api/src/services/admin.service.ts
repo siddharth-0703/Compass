@@ -5,9 +5,11 @@ import { SchemeRepository } from '../repositories/scheme.repository';
 import { logger } from '@rural/logger';
 import { PaginationParams } from '../utils/pagination';
 import { Queue } from 'bullmq';
+import Redis from 'ioredis';
 
-const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
-const syncQueue = new Queue('scheme-sync-tasks', { connection: { host: REDIS_HOST, port: 6379 } });
+const redisConn = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { family: 0 });
+redisConn.on('error', (err) => console.error('Redis AdminQueue Error:', err));
+const syncQueue = new Queue('scheme-sync-tasks', { connection: redisConn });
 export class AdminService {
   private adminRepo: AdminRepository;
   private authRepo: UserRepository;

@@ -2,10 +2,9 @@ import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import Redis from 'ioredis';
 
-const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
-
 // Use a dedicated redis client for rate limiting
-const redisClient = new Redis(`redis://${REDIS_HOST}:6379`);
+const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { family: 0 });
+redisClient.on('error', (err) => console.error('Redis RateLimiter Error:', err));
 
 const createLimiter = (prefix: string, windowMs: number, max: number, message: string) => {
   return rateLimit({

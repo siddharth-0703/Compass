@@ -6,7 +6,8 @@ class ObservabilityService {
   private redisClient: Redis;
 
   constructor() {
-    this.redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+    this.redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { family: 0 });
+    this.redisClient.on('error', (err) => logger.error({ err }, 'Redis Observability Error'));
   }
 
   async getHealthMetrics() {

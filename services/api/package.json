@@ -20,7 +20,9 @@
     "zod": "^3.22.4",
     "@rural/ai-core": "*",
     "@rural/types": "*",
-    "@rural/database": "*"
+    "@rural/database": "*",
+    "@rural/auth": "*",
+    "@rural/logger": "*"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

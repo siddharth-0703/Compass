@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../presentation/providers/eligibility_provider.dart';
+import '../../businesses/presentation/providers/business_provider.dart';
 import '../presentation/providers/scheme_recommendation_provider.dart';
 
 class SchemeRecommenderScreen extends ConsumerWidget {
@@ -9,86 +9,95 @@ class SchemeRecommenderScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profileState = ref.watch(eligibilityProfileProvider);
-    final recommendationsState = ref.watch(schemeRecommendationProvider);
+    final businessesState = ref.watch(myBusinessesProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Government Schemes'),
+        title: const Text('Government Schemes',
+            style: TextStyle(fontWeight: FontWeight.bold),),
         actions: [
           IconButton(
-            icon: const Icon(Icons.assignment_ind),
-            tooltip: 'Update Eligibility Profile',
-            onPressed: () => context.push('/schemes/questionnaire'),
+            icon: const Icon(Icons.business),
+            tooltip: 'Manage Businesses',
+            onPressed: () => context.push('/businesses'),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // 1. Profile Stale Check (Boundary Safety)
-          profileState.when(
-            data: (profile) {
-              if (profile == null) {
-                return _buildAlertBox(
+      body: businessesState.when(
+        data: (businesses) {
+          if (businesses.isEmpty) {
+            return Center(
+              child: SingleChildScrollView(
+                child: _buildAlertBox(
                   context,
-                  'Profile Incomplete',
-                  'Fill in the eligibility questionnaire to discover schemes tailored for you.',
-                  actionText: 'Start Questionnaire',
-                  onAction: () => context.push('/schemes/questionnaire'),
-                );
-              }
-              // Display version and timestamp metadata
-              return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: Colors.blue.shade50,
+                  'No Business Profile Found',
+                  'You need to register a business first before we can recommend government schemes tailored for you.',
+                  actionText: 'Register Business',
+                  onAction: () => context.push('/businesses/new'),
+                ),
+              ),
+            );
+          }
+
+          final activeBusiness = businesses.first;
+          final recommendationsState = ref.watch(schemeRecommendationProvider);
+          
+          // Trigger the fetch if it hasn't been fetched yet
+          // Note: In Riverpod a better pattern would be a FutureProvider with businessId parameter,
+          // but we will keep the StateNotifier for now and use a post-frame callback if it's empty data
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (recommendationsState.value == null || recommendationsState.value!.isEmpty) {
+              ref.read(schemeRecommendationProvider.notifier).fetchRecommendations(activeBusiness.id);
+            }
+          });
+
+          return Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Profile Version: v${profile.profileVersion}',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blueAccent,),
-                    ),
-                    Text(
-                      'Last Saved: ${profile.profileUpdatedAt?.toLocal().toString().split('.')[0] ?? "Never"}',
-                      style:
-                          const TextStyle(fontSize: 12, color: Colors.black54),
+                    Icon(Icons.business, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Recommending schemes for: ${activeBusiness.name}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              );
-            },
-            loading: () => const LinearProgressIndicator(),
-            error: (err, stack) => const SizedBox.shrink(),
-          ),
-
-          // 2. Recommendations List View
-          Expanded(
-            child: recommendationsState.when(
-              data: (list) {
-                if (list.isEmpty) {
-                  return const Center(
-                    child: Text(
-                        'No recommendations found. Try updating your profile.',),
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16.0),
-                  itemCount: list.length,
-                  itemBuilder: (context, index) {
-                    final item = list[index];
-                    return _buildSchemeCard(context, ref, item);
+              ),
+              Expanded(
+                child: recommendationsState.when(
+                  data: (list) {
+                    if (list.isEmpty) {
+                      return const Center(
+                        child: Text('No recommendations found for this business profile.'),
+                      );
+                    }
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16.0),
+                      itemCount: list.length,
+                      itemBuilder: (context, index) {
+                        final item = list[index];
+                        return _buildSchemeCard(context, ref, item);
+                      },
+                    );
                   },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) =>
-                  Center(child: Text('Error loading recommendations: $err')),
-            ),
-          ),
-        ],
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Center(child: Text('Error loading recommendations: $err')),
+                ),
+              ),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error loading business: $err')),
       ),
     );
   }

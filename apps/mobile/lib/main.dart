@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/storage/hive_storage.dart';
 import 'core/router/app_router.dart';
 import 'core/network/sync_manager.dart';
+import 'core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,13 +32,8 @@ class RuralEntrepreneurApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'Rural Entrepreneur App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData.dark(useMaterial3: true),
-      themeMode:
-          ThemeMode.system, // Will be overridden by Hive settings in the future
+      theme: AppTheme.lightTheme,
+      themeMode: ThemeMode.light, // Using light theme by default for consistency with web
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

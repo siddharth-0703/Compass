@@ -22,7 +22,7 @@ class SyncManager {
   SyncManager(this.ref) {
     _dio = Dio(
       BaseOptions(
-        baseUrl: 'http://10.0.2.2:4000/api', // Android Emulator localhost
+        baseUrl: 'https://compass-1ej0.onrender.com/api', // Render Production API
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
       ),

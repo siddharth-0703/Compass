@@ -10,8 +10,8 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._remoteDataSource, this._secureStorage);
 
   @override
-  Future<UserModel> loginWithPhone(String phone, String otp) async {
-    final data = await _remoteDataSource.loginWithPhone(phone, otp);
+  Future<UserModel> login({required String email, required String password}) async {
+    final data = await _remoteDataSource.login(email, password);
 
     // The BFF sets HttpOnly cookies for web, but for mobile it should return tokens
     // Assuming backend returns { accessToken, refreshToken, user: {...} }

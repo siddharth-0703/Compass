@@ -14,7 +14,7 @@ class ApiClient {
           BaseOptions(
             baseUrl: const String.fromEnvironment(
               'API_URL',
-              defaultValue: 'http://10.0.2.2:4000/api/v1',
+              defaultValue: 'https://compass-1ej0.onrender.com/api/v1',
             ),
             connectTimeout: const Duration(seconds: 15),
             receiveTimeout: const Duration(seconds: 15),

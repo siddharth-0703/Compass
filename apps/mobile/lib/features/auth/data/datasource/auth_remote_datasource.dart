@@ -6,12 +6,12 @@ class AuthRemoteDataSource {
 
   AuthRemoteDataSource(this._apiClient);
 
-  Future<Map<String, dynamic>> loginWithPhone(String phone, String otp) async {
+  Future<Map<String, dynamic>> login(String email, String password) async {
     final response = await _apiClient.dio.post(
       '/auth/login',
       data: {
-        'phone': phone,
-        'otp': otp,
+        'email': email,
+        'password': password,
       },
     );
     return response.data; // Expected to contain tokens and user

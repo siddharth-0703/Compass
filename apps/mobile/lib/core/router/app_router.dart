@@ -15,6 +15,9 @@ import '../../features/schemes/presentation/screens/scheme_questionnaire_screen.
 import '../../features/mentorship/presentation/screens/mentor_match_screen.dart';
 import '../../features/mentorship/presentation/screens/mentor_detail_screen.dart';
 import '../../features/mentorship/presentation/screens/my_sessions_screen.dart';
+import '../../features/businesses/presentation/screens/business_list_screen.dart';
+import '../../features/market/presentation/screens/market_prices_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -53,6 +56,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return CoursePlayerScreen(
               courseId: courseId, initialLessonId: lessonId,);
         },
+      ),
+      GoRoute(
+        path: '/businesses',
+        name: 'businesses',
+        builder: (context, state) => const BusinessListScreen(),
+      ),
+      GoRoute(
+        path: '/market',
+        name: 'market',
+        builder: (context, state) => const MarketPricesScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/settings/sync',

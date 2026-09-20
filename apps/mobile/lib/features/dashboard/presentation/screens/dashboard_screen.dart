@@ -52,58 +52,174 @@ class DashboardScreen extends ConsumerWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              ref.read(authNotifierProvider.notifier).logout();
-            },
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-                'Welcome, ${authState.user?.firstName ?? authState.user?.phone ?? "User"}!',),
-            const SizedBox(height: 16),
-            const Text('This is the dashboard screen.'),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.school),
-              label: const Text('Open Learning Hub'),
-              onPressed: () => context.push('/learning'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.gavel),
-              label: const Text('Government Schemes'),
-              onPressed: () => context.push('/schemes'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.people),
-              label: const Text('Connect with Mentors'),
-              onPressed: () => context.push('/mentors'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.sync),
-              label: const Text('Offline Operations Center'),
-              onPressed: () => context.push('/settings/sync'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    Theme.of(context).colorScheme.tertiaryContainer,
-                foregroundColor:
-                    Theme.of(context).colorScheme.onTertiaryContainer,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Welcome, ${authState.user?.firstName ?? authState.user?.phone ?? "User"}!',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  letterSpacing: -0.5,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                'What would you like to explore today?',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 32),
+              
+              _buildFeatureCard(
+                context,
+                title: 'Learning Hub',
+                description: 'Access courses, tutorials, and business skills',
+                icon: Icons.school_outlined,
+                onTap: () => context.push('/learning'),
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              _buildFeatureCard(
+                context,
+                title: 'My Businesses',
+                description: 'Manage your business profiles and insights',
+                icon: Icons.storefront_outlined,
+                onTap: () => context.push('/businesses'),
+                color: Colors.purple.shade600,
+              ),
+              const SizedBox(height: 16),
+              _buildFeatureCard(
+                context,
+                title: 'Government Schemes',
+                description: 'Discover grants and support for your business',
+                icon: Icons.gavel_outlined,
+                onTap: () => context.push('/schemes'),
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+              const SizedBox(height: 16),
+              _buildFeatureCard(
+                context,
+                title: 'Market Prices',
+                description: 'Check daily mandi rates for commodities',
+                icon: Icons.currency_rupee,
+                onTap: () => context.push('/market'),
+                color: Colors.green.shade600,
+              ),
+              const SizedBox(height: 16),
+              _buildFeatureCard(
+                context,
+                title: 'Mentorship',
+                description: 'Connect with experts and schedule sessions',
+                icon: Icons.people_outline,
+                onTap: () => context.push('/mentors'),
+                color: Colors.blue.shade600,
+              ),
+              const SizedBox(height: 32),
+              
+              const Divider(),
+              const SizedBox(height: 16),
+              
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.sync, color: Theme.of(context).colorScheme.onSurface),
+                ),
+                title: const Text('Offline Operations Center', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Manage data sync for offline access'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/settings/sync'),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.mic),
-        label: const Text('Voice Assistant'),
+        icon: const Icon(Icons.mic, color: Colors.white),
+        label: const Text('Voice Assistant', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         onPressed: () => VoiceAssistantOverlay.show(context),
+      ),
+    );
+  }
+
+  Widget _buildFeatureCard(
+    BuildContext context, {
+    required String title,
+    required String description,
+    required IconData icon,
+    required VoidCallback onTap,
+    required Color color,
+  }) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

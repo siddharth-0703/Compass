@@ -2,9 +2,12 @@ import { LearningRepository } from '../repositories/learning.repository';
 import { BusinessRepository } from '../repositories/business.repository';
 import { logger } from '@rural/logger';
 import { Queue } from 'bullmq';
+import Redis from 'ioredis';
 import axios from 'axios';
 
-const aiQueue = new Queue('ai-tasks', { connection: { host: 'localhost', port: 6379 } });
+const redisConn = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { family: 0, maxRetriesPerRequest: null });
+redisConn.on('error', (err) => console.error('Redis LearningQueue Error:', err));
+const aiQueue = new Queue('ai-tasks', { connection: redisConn });
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000/api/v1/ai';
 
 export class LearningService {

@@ -2,9 +2,11 @@ import { GroupRepository } from '../repositories/group.repository';
 import { PostRepository } from '../repositories/post.repository';
 import { logger } from '@rural/logger';
 import { Queue } from 'bullmq';
+import Redis from 'ioredis';
 
-// BullMQ Queue for AI background tasks (Rec 9)
-const aiQueue = new Queue('ai-tasks', { connection: { host: 'localhost', port: 6379 } });
+const redisConn = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { family: 0, maxRetriesPerRequest: null });
+redisConn.on('error', (err) => console.error('Redis CommunityQueue Error:', err));
+const aiQueue = new Queue('ai-tasks', { connection: redisConn });
 
 export class CommunityService {
   private groupRepo: GroupRepository;

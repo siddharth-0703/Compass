@@ -4,8 +4,11 @@ import { ProfileBuilder } from '../domain/schemes/eligibility/profile-builder';
 import { RecommendationEngine } from '../domain/schemes/recommendation/recommendation.engine';
 import { logger } from '@rural/logger';
 import { Queue } from 'bullmq';
+import Redis from 'ioredis';
 
-const aiQueue = new Queue('ai-tasks', { connection: { host: 'localhost', port: 6379 } });
+const redisConn = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { family: 0, maxRetriesPerRequest: null });
+redisConn.on('error', (err) => console.error('Redis SchemeQueue Error:', err));
+const aiQueue = new Queue('ai-tasks', { connection: redisConn });
 
 export class SchemeService {
   private schemeRepo: SchemeRepository;

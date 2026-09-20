@@ -1,8 +1,11 @@
 import { NotificationRepository } from '../repositories/notification.repository';
 import { Queue } from 'bullmq';
+import Redis from 'ioredis';
 import { logger } from '@rural/logger';
 
-const notificationQueue = new Queue('notification-tasks', { connection: { host: 'localhost', port: 6379 } });
+const redisConn = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { family: 0, maxRetriesPerRequest: null });
+redisConn.on('error', (err) => console.error('Redis NotificationQueue Error:', err));
+const notificationQueue = new Queue('notification-tasks', { connection: redisConn });
 
 export class NotificationService {
   private notificationRepo: NotificationRepository;

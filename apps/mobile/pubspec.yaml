@@ -40,6 +40,7 @@ dependencies:
 
   # Icons & UI Helper
   cupertino_icons: ^1.0.6
+  google_fonts: ^8.2.1
   timeago: ^3.7.1
   path_provider: ^2.1.6
   crypto: ^3.0.7
@@ -47,6 +48,7 @@ dependencies:
   url_launcher: ^6.2.5
   speech_to_text: any
   flutter_tts: any
+  lucide_icons_flutter: ^3.1.20
 
 dev_dependencies:
   flutter_test:
@@ -60,3 +62,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/

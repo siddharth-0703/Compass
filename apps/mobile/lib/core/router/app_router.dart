@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Screens will be imported later
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/learning/presentation/screens/learning_screen.dart';
 import '../../features/learning/presentation/screens/course_detail_screen.dart';
@@ -28,6 +29,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/login',
         name: 'login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/signup',
+        name: 'signup',
+        builder: (context, state) => const SignupScreen(),
       ),
       GoRoute(
         path: '/',
@@ -112,14 +118,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) {
-      final isLoggingIn = state.uri.path == '/login';
+      final isAuthPage = state.uri.path == '/login' || state.uri.path == '/signup';
       final isLoggedIn = authState.user != null;
 
-      // If not logged in and not on login page, redirect to login
-      if (!isLoggedIn && !isLoggingIn) return '/login';
+      // If not logged in and not on auth page, redirect to login
+      if (!isLoggedIn && !isAuthPage) return '/login';
 
-      // If logged in and on login page, redirect to dashboard
-      if (isLoggedIn && isLoggingIn) return '/';
+      // If logged in and on auth page, redirect to dashboard
+      if (isLoggedIn && isAuthPage) return '/';
 
       return null; // No redirect needed
     },

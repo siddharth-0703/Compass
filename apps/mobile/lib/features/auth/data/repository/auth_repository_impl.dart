@@ -15,9 +15,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
     // The BFF sets HttpOnly cookies for web, but for mobile it should return tokens
     // Assuming backend returns { accessToken, refreshToken, user: {...} }
-    final accessToken = data['accessToken'];
-    final refreshToken = data['refreshToken'];
-    final userJson = data['user'] ?? data['data'];
+    final payload = data['data'] ?? data;
+    final accessToken = payload['accessToken'];
+    final refreshToken = payload['refreshToken'];
+    final userJson = payload['user'] ?? payload;
 
     if (accessToken != null && refreshToken != null) {
       await _secureStorage.saveTokens(
@@ -26,7 +27,62 @@ class AuthRepositoryImpl implements AuthRepository {
       );
     }
 
-    return UserModel.fromJson(userJson);
+    final mappedUserJson = {
+      'id': userJson['id'] ?? '',
+      'phone': userJson['phone'] ?? '',
+      'email': userJson['email'],
+      'firstName': userJson['name']?.toString().split(' ').first,
+      'lastName': userJson['name']?.toString().split(' ').skip(1).join(' '),
+      'role': (userJson['roles'] is List && userJson['roles'].isNotEmpty) 
+          ? userJson['roles'][0] 
+          : 'entrepreneur',
+      'createdAt': userJson['createdAt'] ?? DateTime.now().toIso8601String(),
+    };
+
+    return UserModel.fromJson(mappedUserJson);
+  }
+
+  @override
+  Future<UserModel> signup({
+    required String firstName,
+    required String lastName,
+    String? email,
+    required String phone,
+    required String password,
+  }) async {
+    final data = await _remoteDataSource.signup(
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      phone: phone,
+      password: password,
+    );
+
+    final payload = data['data'] ?? data;
+    final accessToken = payload['accessToken'];
+    final refreshToken = payload['refreshToken'];
+    final userJson = payload['user'] ?? payload;
+
+    if (accessToken != null && refreshToken != null) {
+      await _secureStorage.saveTokens(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      );
+    }
+
+    final mappedUserJson = {
+      'id': userJson['id'] ?? '',
+      'phone': userJson['phone'] ?? '',
+      'email': userJson['email'],
+      'firstName': userJson['name']?.toString().split(' ').first,
+      'lastName': userJson['name']?.toString().split(' ').skip(1).join(' '),
+      'role': (userJson['roles'] is List && userJson['roles'].isNotEmpty) 
+          ? userJson['roles'][0] 
+          : 'entrepreneur',
+      'createdAt': userJson['createdAt'] ?? DateTime.now().toIso8601String(),
+    };
+
+    return UserModel.fromJson(mappedUserJson);
   }
 
   @override

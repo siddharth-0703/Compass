@@ -1,32 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class SignupScreen extends ConsumerStatefulWidget {
+  const SignupScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _login() {
+  void _signup() {
     FocusScope.of(context).unfocus();
-    ref.read(authNotifierProvider.notifier).login(
-          _emailController.text.trim(),
-          _passwordController.text,
+    ref.read(authNotifierProvider.notifier).signup(
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          email: _emailController.text.trim(),
+          phone: _phoneController.text.trim(),
+          password: _passwordController.text,
         );
   }
 
@@ -43,6 +52,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
+      } else if (next.user != null && previous?.user == null) {
+        // Navigation handled by router based on auth state typically,
+        // but if not, navigate to dashboard here
       }
     });
 
@@ -62,7 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
-                      'Welcome back',
+                      'Create your account',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 32,
@@ -74,7 +86,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Don't have an account? ",
+                          "Already have an account? ",
                           style: TextStyle(
                             fontSize: 18,
                             color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
@@ -82,10 +94,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            context.push('/signup'); // Navigation to be implemented
+                            if (context.canPop()) {
+                              context.pop();
+                            } else {
+                              context.go('/login'); // Fallback if direct link
+                            }
                           },
                           child: Text(
-                            'Sign up',
+                            'Sign in',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
@@ -113,104 +129,115 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                       ),
+                    
+                    // First & Last Name Grid
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'First Name',
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                              ),
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: _firstNameController,
+                                decoration: const InputDecoration(hintText: 'Rahul'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Last Name',
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                              ),
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: _lastNameController,
+                                decoration: const InputDecoration(hintText: 'Sharma'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    
                     const Text(
-                      'Email or Phone Number',
+                      'Email Address (Optional)',
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
-                        hintText: 'you@example.com or +919876543210',
-                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(hintText: 'rahul@example.com'),
                     ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Password',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                        ),
-                        GestureDetector(
-                          onTap: () {},
-                          child: Text(
-                            'Forgot password?',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 16),
+                    
+                    const Text(
+                      'Phone Number',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(hintText: '+919876543210'),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    const Text(
+                      'Password',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _passwordController,
                       obscureText: true,
-                      decoration: const InputDecoration(
-                        hintText: '••••••••',
-                      ),
+                      decoration: const InputDecoration(hintText: '••••••••'),
                     ),
                     const SizedBox(height: 24),
+                    
                     SizedBox(
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: authState.isLoading ? null : _login,
+                        onPressed: authState.isLoading ? null : _signup,
                         child: authState.isLoading
                             ? const SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                               )
-                            : const Text('Sign in', style: TextStyle(fontSize: 18)),
+                            : const Text('Create Account', style: TextStyle(fontSize: 18)),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
+                    
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Expanded(child: Divider()),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text(
-                            'OR CONTINUE WITH',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
-                            ),
-                          ),
+                        const Icon(
+                          LucideIcons.shieldCheck,
+                          size: 16,
+                          color: Color(0xFF3A9742), // Web uses text-success, which mapped to 0xFF3A9742
                         ),
-                        const Expanded(child: Divider()),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 48,
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Google Sign-In integration pending backend support.")),
-                          );
-                        },
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6.0),
-                          ),
-                          side: BorderSide(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
-                          ),
-                        ),
-                        icon: const Icon(Icons.account_circle_outlined, size: 20),
-                        label: Text(
-                          'Sign in with Google',
+                        const SizedBox(width: 8),
+                        Text(
+                          'Your data is secure and encrypted',
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 14,
+                            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
@@ -219,12 +246,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
 
           Widget imageSection = Container(
-            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             child: Stack(
               fit: StackFit.expand,
               children: [
                 Image.asset(
-                  'assets/images/hero-image-2.jpg',
+                  'assets/images/hero-image-1.jpg',
                   fit: BoxFit.cover,
                 ),
                 Container(
@@ -247,12 +274,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   bottom: 32,
                   left: 32,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Empower your rural enterprise.',
-                        textAlign: TextAlign.right,
+                        'Join the future of rural commerce.',
+                        textAlign: TextAlign.left,
                         style: TextStyle(
                           fontSize: isLargeScreen ? 48 : 32,
                           fontWeight: FontWeight.bold,
@@ -265,8 +292,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Join thousands of entrepreneurs accessing schemes, mentorship, and market insights through Compass.',
-                        textAlign: TextAlign.right,
+                        'Connect with mentors, access government schemes, and scale your business with our AI-powered ecosystem.',
+                        textAlign: TextAlign.left,
                         style: TextStyle(
                           fontSize: isLargeScreen ? 20 : 16,
                           color: Colors.white,
@@ -286,13 +313,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           if (isLargeScreen) {
             return Row(
               children: [
+                Expanded(child: imageSection), // On signup, image is on the left
                 Expanded(child: formSection),
-                Expanded(child: imageSection),
               ],
             );
           } else {
-            // Mobile: only show form section to match web "hidden lg:flex"
-            return formSection;
+            return formSection; // Hide image on mobile like web does
           }
         },
       ),

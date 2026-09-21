@@ -14,7 +14,8 @@ class MarketPricesScreen extends ConsumerWidget {
     final notifier = ref.read(marketPricesProvider.notifier);
     
     // Fallback dictionary for states and crops, simulating web behavior
-    final states = ['Maharashtra', 'Gujarat', 'Karnataka', 'Punjab'];
+    final states = ['Maharashtra', 'Gujarat', 'Karnataka', 'Punjab', 'Uttar Pradesh'];
+    final commodities = ['Wheat', 'Rice', 'Maize', 'Cotton', 'Sugarcane', 'Soyabean', 'Potato', 'Onion', 'Tomato'];
     
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -107,18 +108,22 @@ class MarketPricesScreen extends ConsumerWidget {
                           
                           Text('Commodity', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
                           const SizedBox(height: 8),
-                          TextFormField(
-                            initialValue: notifier.currentCommodity,
+                          DropdownButtonFormField<String>(
+                            initialValue: commodities.contains(notifier.currentCommodity) ? notifier.currentCommodity : null,
                             decoration: InputDecoration(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                                 borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
                               ),
-                              hintText: 'e.g., Wheat',
+                              hintText: 'Select Commodity',
                             ),
-                            onFieldSubmitted: (val) {
-                              notifier.fetchPrices(commodity: val.isEmpty ? null : val);
+                            items: [
+                              const DropdownMenuItem<String>(value: null, child: Text('All Commodities')),
+                              ...commodities.map((c) => DropdownMenuItem(value: c, child: Text(c))),
+                            ],
+                            onChanged: (val) {
+                              notifier.fetchPrices(commodity: val);
                             },
                           ),
                           const SizedBox(height: 24),
@@ -214,7 +219,7 @@ class MarketPricesScreen extends ConsumerWidget {
                           children: [
                             const Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
                             const SizedBox(height: 4),
-                            Text(err.toString(), style: const TextStyle(fontSize: 14, color: Colors.red)),
+                            Text(err.toString().replaceAll('Exception: ', ''), style: const TextStyle(fontSize: 14, color: Colors.red)),
                           ],
                         ),
                       ),

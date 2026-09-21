@@ -115,7 +115,7 @@ class BusinessListScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 Text('Failed to load businesses', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
                 const SizedBox(height: 8),
-                Text(error.toString(), textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+                Text(error.toString().replaceAll('Exception: ', ''), textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () => ref.refresh(myBusinessesProvider),

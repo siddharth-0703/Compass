@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/storage/hive_storage.dart';
 import '../models/market_price_model.dart';
@@ -31,9 +32,16 @@ class MarketRepository {
         
         return models;
       }
-      throw Exception(response.data['error']?['message'] ?? 'Failed to load market prices');
+      final errorData = response.data['error'];
+      final message = errorData is String ? errorData : (errorData?['message'] ?? 'Failed to load market prices');
+      throw Exception(message);
+    } on DioException catch (e) {
+      // Throw early instead of caching error, let the calling code handle it
+      final errorData = e.response?.data?['error'];
+      final message = errorData is String ? errorData : (errorData?['message'] ?? 'Network error occurred');
+      throw Exception(message);
     } catch (e) {
-      // Fallback to cache
+      // Fallback to cache for other non-network errors
       final cached = HiveStorage.settingsBox.get(cacheKey);
       if (cached != null) {
         final data = cached as List<dynamic>;

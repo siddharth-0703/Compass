@@ -14,9 +14,13 @@ class BusinessRepository {
         final List<dynamic> data = response.data['data'];
         return data.map((json) => BusinessModel.fromJson(json)).toList();
       }
-      throw Exception(response.data['error']?['message'] ?? 'Failed to load businesses');
+      final errorData = response.data['error'];
+      final message = errorData is String ? errorData : (errorData?['message'] ?? 'Failed to load businesses');
+      throw Exception(message);
     } on DioException catch (e) {
-      throw Exception(e.response?.data?['error']?['message'] ?? 'Network error occurred');
+      final errorData = e.response?.data?['error'];
+      final message = errorData is String ? errorData : (errorData?['message'] ?? 'Network error occurred');
+      throw Exception(message);
     }
   }
 }

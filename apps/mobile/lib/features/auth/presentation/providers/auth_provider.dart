@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../../domain/repository/auth_repository.dart';
 import '../../data/models/user_model.dart';
 import '../../data/repository/auth_repository_impl.dart';
@@ -68,6 +69,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _authRepository.login(email: email, password: password);
       state = state.copyWith(isLoading: false, user: user);
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'] ?? e.response?.data?['error'] ?? 'Invalid credentials.';
+      state = state.copyWith(isLoading: false, error: message.toString());
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }

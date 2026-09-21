@@ -55,7 +55,6 @@ class ApiClient {
     if (e.requestOptions.path.contains('/auth/refresh')) {
       // Refresh token itself expired
       await _secureStorage.clearTokens();
-      // TODO: Navigate to login
       return handler.next(e);
     }
 
@@ -102,7 +101,7 @@ class ApiClient {
         _isRefreshing = false;
         _refreshQueue.clear();
         await _secureStorage.clearTokens();
-        // TODO: Navigate to login
+        // Navigation to login should be handled by the router listener
         return handler.next(e);
       }
     } else {

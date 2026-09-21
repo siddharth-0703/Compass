@@ -10,6 +10,9 @@ import '../../../shared/presentation/widgets/voice_assistant_overlay.dart';
 import '../../../learning/presentation/screens/learning_screen.dart';
 import '../../../schemes/screens/scheme_recommender_screen.dart';
 import '../../../businesses/presentation/screens/business_list_screen.dart';
+import '../widgets/hero_banner.dart';
+import '../widgets/quick_actions.dart';
+import '../widgets/metric_card.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -330,98 +333,70 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildHomeTab(BuildContext context, AuthState authState) {
+  Widget _buildHomeTab(BuildContext context, dynamic authState) {
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Welcome, ${authState.user?.firstName ?? authState.user?.phone ?? "User"}!',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-                letterSpacing: -0.5,
+      child: RefreshIndicator(
+        onRefresh: () async {
+          // Implement refresh logic here
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const HeroBanner(),
+              const SizedBox(height: 24),
+              QuickActions(
+                onTabSelected: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'What would you like to explore today?',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-            const SizedBox(height: 32),
-            
-            _buildFeatureCard(
-              context,
-              title: 'Learning Hub',
-              description: 'Access courses, tutorials, and business skills',
-              icon: LucideIcons.bookOpen,
-              onTap: () => setState(() => _currentIndex = 2),
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 16),
-            _buildFeatureCard(
-              context,
-              title: 'My Businesses',
-              description: 'Manage your business profiles and insights',
-              icon: LucideIcons.building2,
-              onTap: () => setState(() => _currentIndex = 1),
-              color: Colors.purple.shade600,
-            ),
-            const SizedBox(height: 16),
-            _buildFeatureCard(
-              context,
-              title: 'Government Schemes',
-              description: 'Discover grants and support for your business',
-              icon: LucideIcons.heartHandshake,
-              onTap: () => setState(() => _currentIndex = 3),
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-            const SizedBox(height: 16),
-            _buildFeatureCard(
-              context,
-              title: 'Market Prices',
-              description: 'Check daily mandi rates for commodities',
-              icon: LucideIcons.lineChart,
-              onTap: () => context.push('/market'),
-              color: Colors.green.shade600,
-            ),
-            const SizedBox(height: 16),
-            _buildFeatureCard(
-              context,
-              title: 'Mentorship',
-              description: 'Connect with experts and schedule sessions',
-              icon: LucideIcons.graduationCap,
-              onTap: () => context.push('/mentors'),
-              color: Colors.blue.shade600,
-            ),
-            const SizedBox(height: 32),
-            
-            const Divider(),
-            const SizedBox(height: 16),
-            
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-                  borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 24),
+              Text(
+                'Business Health',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
-                child: Icon(LucideIcons.refreshCw, color: Theme.of(context).colorScheme.onSurface),
               ),
-              title: const Text('Offline Operations Center', style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: const Text('Manage data sync for offline access'),
-              trailing: const Icon(LucideIcons.chevronRight),
-              onTap: () => context.push('/settings/sync'),
-            ),
-          ],
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 120,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
+                  children: const [
+                    MetricCard(
+                      title: 'Active Businesses',
+                      value: '1',
+                      trend: 'vs last month',
+                      trendValue: 0.0,
+                      icon: LucideIcons.building2,
+                    ),
+                    MetricCard(
+                      title: 'Community Members',
+                      value: '12',
+                      trend: 'vs last month',
+                      trendValue: 12.5,
+                      icon: LucideIcons.users,
+                    ),
+                    MetricCard(
+                      title: 'Learning Hours',
+                      value: '4.5',
+                      trend: 'vs last week',
+                      trendValue: 5.2,
+                      icon: LucideIcons.graduationCap,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );

@@ -90,14 +90,14 @@ class SchemeRecommenderScreen extends ConsumerWidget {
                     );
                   },
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (err, stack) => Center(child: Text('Error loading recommendations: $err')),
+                  error: (err, stack) => Center(child: Text('Error loading recommendations: ${err.toString().replaceAll('Exception: ', '')}')),
                 ),
               ),
             ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error loading business: $err')),
+        error: (err, stack) => Center(child: Text('Error loading business: ${err.toString().replaceAll('Exception: ', '')}')),
       ),
     );
   }
@@ -132,6 +132,36 @@ class SchemeRecommenderScreen extends ConsumerWidget {
     );
   }
 
+  Color _getCategoryColor(String? category) {
+    switch (category?.toUpperCase()) {
+      case 'AGRICULTURE': return Colors.green.shade100;
+      case 'ENTREPRENEURSHIP': return Colors.blue.shade100;
+      case 'FINANCE': return Colors.amber.shade100;
+      case 'EMPLOYMENT': return Colors.purple.shade100;
+      case 'EDUCATION': return Colors.indigo.shade100;
+      case 'HOUSING': return Colors.orange.shade100;
+      case 'WOMEN': return Colors.pink.shade100;
+      case 'MSME': return Colors.cyan.shade100;
+      case 'STARTUP': return Colors.deepPurple.shade100;
+      default: return Colors.grey.shade100;
+    }
+  }
+
+  Color _getCategoryTextColor(String? category) {
+    switch (category?.toUpperCase()) {
+      case 'AGRICULTURE': return Colors.green.shade800;
+      case 'ENTREPRENEURSHIP': return Colors.blue.shade800;
+      case 'FINANCE': return Colors.amber.shade900;
+      case 'EMPLOYMENT': return Colors.purple.shade800;
+      case 'EDUCATION': return Colors.indigo.shade800;
+      case 'HOUSING': return Colors.orange.shade800;
+      case 'WOMEN': return Colors.pink.shade800;
+      case 'MSME': return Colors.cyan.shade900;
+      case 'STARTUP': return Colors.deepPurple.shade800;
+      default: return Colors.grey.shade800;
+    }
+  }
+
   Widget _buildSchemeCard(BuildContext context, WidgetRef ref, dynamic item) {
     // Expected dynamic backend response structure
     final scheme = item['scheme'];
@@ -155,33 +185,56 @@ class SchemeRecommenderScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${scheme['category']} • ${scheme['ministry'] ?? "Central government"}',
-                  style: const TextStyle(
-                      color: Colors.blueAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,),
-                ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color:
-                        isEligible ? Colors.green.shade50 : Colors.red.shade50,
-                    border: Border.all(
-                        color: isEligible
-                            ? Colors.green.shade200
-                            : Colors.red.shade200,),
-                    borderRadius: BorderRadius.circular(8),
+                    color: _getCategoryColor(scheme['category']),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    isEligible ? '$matchPercentage% Relevance' : 'Not Eligible',
+                    '${scheme['category']} • ${scheme['ministry'] ?? "Central government"}',
                     style: TextStyle(
-                        color: isEligible ? Colors.green : Colors.red,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,),
+                      color: _getCategoryTextColor(scheme['category']),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
+                if (!isEligible)
+                  const Text('Ineligible (Does not meet strict criteria)', style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold))
+                else ...[
+                  Row(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 6,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: matchPercentage / 100,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: matchPercentage >= 85 ? Colors.green : (matchPercentage >= 70 ? Colors.amber : Colors.orange),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '$matchPercentage% Match',
+                        style: TextStyle(
+                          color: matchPercentage >= 85 ? Colors.green.shade700 : (matchPercentage >= 70 ? Colors.amber.shade700 : Colors.orange.shade700),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 12),

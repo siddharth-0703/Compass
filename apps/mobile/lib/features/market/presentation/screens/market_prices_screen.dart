@@ -13,9 +13,8 @@ class MarketPricesScreen extends ConsumerWidget {
     final pricesState = ref.watch(marketPricesProvider);
     final notifier = ref.read(marketPricesProvider.notifier);
     
-    // Fallback dictionary for states and crops, simulating web behavior
-    final states = ['Maharashtra', 'Gujarat', 'Karnataka', 'Punjab', 'Uttar Pradesh'];
-    final commodities = ['Wheat', 'Rice', 'Maize', 'Cotton', 'Sugarcane', 'Soyabean', 'Potato', 'Onion', 'Tomato'];
+    final statesAsync = ref.watch(marketStatesProvider);
+    final commoditiesAsync = ref.watch(marketCommoditiesProvider(notifier.currentState));
     
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -89,42 +88,50 @@ class MarketPricesScreen extends ConsumerWidget {
                           // Form Fields
                           Text('State', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
                           const SizedBox(height: 8),
-                          DropdownButtonFormField<String>(
-                            initialValue: states.contains(notifier.currentState) ? notifier.currentState : null,
-                            decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                          statesAsync.when(
+                            data: (states) => DropdownButtonFormField<String>(
+                              initialValue: states.contains(notifier.currentState) ? notifier.currentState : null,
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                                ),
+                                hintText: 'Select State',
                               ),
-                              hintText: 'Select State',
+                              items: states.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                              onChanged: (val) {
+                                if (val != null) notifier.fetchPrices(state: val);
+                              },
                             ),
-                            items: states.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-                            onChanged: (val) {
-                              if (val != null) notifier.fetchPrices(state: val);
-                            },
+                            loading: () => const Center(child: CircularProgressIndicator()),
+                            error: (_, __) => const Text('Failed to load states'),
                           ),
                           const SizedBox(height: 16),
                           
                           Text('Commodity', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
                           const SizedBox(height: 8),
-                          DropdownButtonFormField<String>(
-                            initialValue: commodities.contains(notifier.currentCommodity) ? notifier.currentCommodity : null,
-                            decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                          commoditiesAsync.when(
+                            data: (commodities) => DropdownButtonFormField<String>(
+                              initialValue: commodities.contains(notifier.currentCommodity) ? notifier.currentCommodity : null,
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                                ),
+                                hintText: 'Select Commodity',
                               ),
-                              hintText: 'Select Commodity',
+                              items: [
+                                const DropdownMenuItem<String>(value: null, child: Text('All Commodities')),
+                                ...commodities.map((c) => DropdownMenuItem(value: c, child: Text(c))),
+                              ],
+                              onChanged: (val) {
+                                notifier.fetchPrices(commodity: val);
+                              },
                             ),
-                            items: [
-                              const DropdownMenuItem<String>(value: null, child: Text('All Commodities')),
-                              ...commodities.map((c) => DropdownMenuItem(value: c, child: Text(c))),
-                            ],
-                            onChanged: (val) {
-                              notifier.fetchPrices(commodity: val);
-                            },
+                            loading: () => const Center(child: CircularProgressIndicator()),
+                            error: (_, __) => const Text('Failed to load commodities'),
                           ),
                           const SizedBox(height: 24),
                           

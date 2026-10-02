@@ -42,3 +42,13 @@ final marketPricesProvider = StateNotifierProvider<MarketPricesNotifier, AsyncVa
   final repository = ref.watch(marketRepositoryProvider);
   return MarketPricesNotifier(repository);
 });
+
+final marketStatesProvider = FutureProvider<List<String>>((ref) {
+  final repo = ref.watch(marketRepositoryProvider);
+  return repo.getStates();
+});
+
+final marketCommoditiesProvider = FutureProvider.family<List<String>, String>((ref, state) {
+  final repo = ref.watch(marketRepositoryProvider);
+  return repo.getCommodities(state);
+});

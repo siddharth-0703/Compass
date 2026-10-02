@@ -4,3 +4,10 @@ npm run dev
 How to Clean & Delete Old APK Builds Automatically
 cd "apps/mobile"
 flutter clean
+
+cd services/api
+npm run dev
+
+docker compose up -d redis mongodb
+
+flutter run -d chrome --web-browser-flag "--disable-web-security" --dart-define=API_URL=http://localhost:4000/api/v1

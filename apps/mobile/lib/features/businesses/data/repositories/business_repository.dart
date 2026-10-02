@@ -9,7 +9,7 @@ class BusinessRepository {
 
   Future<List<BusinessModel>> getMyBusinesses() async {
     try {
-      final response = await _apiClient.dio.get('/business');
+      final response = await _apiClient.dio.get('/businesses/me');
       if (response.data['success'] == true) {
         final List<dynamic> data = response.data['data'];
         return data.map((json) => BusinessModel.fromJson(json)).toList();

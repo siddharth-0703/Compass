@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../../domain/repository/auth_repository.dart';
 import '../datasource/auth_remote_datasource.dart';
 import '../models/user_model.dart';
@@ -20,10 +21,10 @@ class AuthRepositoryImpl implements AuthRepository {
     final refreshToken = payload['refreshToken'];
     final userJson = payload['user'] ?? payload;
 
-    if (accessToken != null && refreshToken != null) {
+    if (accessToken != null) {
       await _secureStorage.saveTokens(
         accessToken: accessToken,
-        refreshToken: refreshToken,
+        refreshToken: refreshToken ?? '',
       );
     }
 
@@ -38,6 +39,8 @@ class AuthRepositoryImpl implements AuthRepository {
           : 'entrepreneur',
       'createdAt': userJson['createdAt'] ?? DateTime.now().toIso8601String(),
     };
+
+    await _secureStorage.saveUser(jsonEncode(mappedUserJson));
 
     return UserModel.fromJson(mappedUserJson);
   }
@@ -63,10 +66,10 @@ class AuthRepositoryImpl implements AuthRepository {
     final refreshToken = payload['refreshToken'];
     final userJson = payload['user'] ?? payload;
 
-    if (accessToken != null && refreshToken != null) {
+    if (accessToken != null) {
       await _secureStorage.saveTokens(
         accessToken: accessToken,
-        refreshToken: refreshToken,
+        refreshToken: refreshToken ?? '',
       );
     }
 
@@ -81,6 +84,8 @@ class AuthRepositoryImpl implements AuthRepository {
           : 'entrepreneur',
       'createdAt': userJson['createdAt'] ?? DateTime.now().toIso8601String(),
     };
+
+    await _secureStorage.saveUser(jsonEncode(mappedUserJson));
 
     return UserModel.fromJson(mappedUserJson);
   }
@@ -101,7 +106,11 @@ class AuthRepositoryImpl implements AuthRepository {
     if (token == null) return null;
 
     try {
-      return await _remoteDataSource.getCurrentUser();
+      final userStr = await _secureStorage.getUser();
+      if (userStr != null) {
+        return UserModel.fromJson(jsonDecode(userStr));
+      }
+      return null;
     } catch (e) {
       return null;
     }

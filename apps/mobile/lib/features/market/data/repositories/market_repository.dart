@@ -60,4 +60,28 @@ class MarketRepository {
     final cacheKey = 'market_prices_${queryParams.toString()}_timestamp';
     return HiveStorage.settingsBox.get(cacheKey) as String?;
   }
+
+  Future<List<String>> getStates() async {
+    try {
+      final response = await _apiClient.dio.get('/mandi/states');
+      if (response.data['success'] == true) {
+        return (response.data['data'] as List).cast<String>();
+      }
+      return ['Maharashtra', 'Gujarat', 'Karnataka', 'Punjab', 'Uttar Pradesh'];
+    } catch (e) {
+      return ['Maharashtra', 'Gujarat', 'Karnataka', 'Punjab', 'Uttar Pradesh'];
+    }
+  }
+
+  Future<List<String>> getCommodities(String state) async {
+    try {
+      final response = await _apiClient.dio.get('/mandi/commodities', queryParameters: {'state': state});
+      if (response.data['success'] == true) {
+        return (response.data['data'] as List).cast<String>();
+      }
+      return ['Wheat', 'Rice', 'Maize', 'Cotton', 'Sugarcane', 'Soyabean', 'Potato', 'Onion', 'Tomato'];
+    } catch (e) {
+      return ['Wheat', 'Rice', 'Maize', 'Cotton', 'Sugarcane', 'Soyabean', 'Potato', 'Onion', 'Tomato'];
+    }
+  }
 }

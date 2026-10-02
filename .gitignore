@@ -114,3 +114,5 @@ dist
 apps/mobile/build/
 apps/mobile/.dart_tool/
 CMD_RUN
+CMD_RUN
+CMD_RUN

@@ -33,7 +33,7 @@ class QuickActions extends StatelessWidget {
               context,
               title: 'Register Business',
               icon: LucideIcons.building2,
-              color: Colors.emerald,
+              color: Colors.teal,
               onTap: () => context.push('/businesses/new'), // Assume router handles this
             ),
             _buildActionCard(

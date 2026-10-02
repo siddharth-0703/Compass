@@ -24,6 +24,16 @@ class BusinessModel {
   });
 
   factory BusinessModel.fromJson(Map<String, dynamic> json) {
+    String? state;
+    String? district;
+    
+    if (json['location'] is Map) {
+      state = json['location']['state'];
+      district = json['location']['district'];
+    } else if (json['location'] is String) {
+      state = json['location']; // If it's just a string, assume it's the state/general location
+    }
+
     return BusinessModel(
       id: json['_id'] ?? json['id'] ?? '',
       name: json['name'] ?? '',
@@ -33,8 +43,8 @@ class BusinessModel {
       yearStarted: json['yearStarted'],
       stage: json['stage'],
       employees: json['employees'],
-      locationState: json['location']?['state'],
-      locationDistrict: json['location']?['district'],
+      locationState: state,
+      locationDistrict: district,
     );
   }
 }

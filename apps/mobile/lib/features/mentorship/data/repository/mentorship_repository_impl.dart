@@ -19,7 +19,7 @@ class MentorshipRepositoryImpl implements MentorshipRepository {
   Future<List<MentorMatch>> getMentorMatches(String businessId) async {
     try {
       final response = await _apiClient.dio.post(
-        '/mentorship/match',
+        '/mentors/match',
         data: {'businessId': businessId},
       );
       if (response.data != null && response.data['success'] == true) {
@@ -38,7 +38,7 @@ class MentorshipRepositoryImpl implements MentorshipRepository {
   Future<MentorProfile> getMentorDetails(String mentorId) async {
     try {
       final response =
-          await _apiClient.dio.get('/mentorship/mentors/$mentorId');
+          await _apiClient.dio.get('/mentors/mentors/$mentorId');
       if (response.data != null && response.data['success'] == true) {
         return MentorProfileModel.fromJson(response.data['data']).toEntity();
       }
@@ -54,7 +54,7 @@ class MentorshipRepositoryImpl implements MentorshipRepository {
     try {
       final dateStr = date.toIso8601String().split('T')[0];
       final response = await _apiClient.dio.get(
-        '/mentorship/mentors/$mentorId/availability',
+        '/mentors/mentors/$mentorId/availability',
         queryParameters: {'date': dateStr},
       );
       if (response.data != null && response.data['success'] == true) {
@@ -78,7 +78,7 @@ class MentorshipRepositoryImpl implements MentorshipRepository {
   }) async {
     try {
       final response = await _apiClient.dio.post(
-        '/mentorship/sessions',
+        '/mentors/sessions',
         data: {
           'mentorId': mentorId,
           'scheduledAt': startTime.toUtc().toIso8601String(),
@@ -101,7 +101,7 @@ class MentorshipRepositoryImpl implements MentorshipRepository {
   @override
   Future<List<MentorshipSession>> getMySessions() async {
     try {
-      final response = await _apiClient.dio.get('/mentorship/sessions');
+      final response = await _apiClient.dio.get('/mentors/sessions');
       if (response.data != null && response.data['success'] == true) {
         final list = response.data['data'] as List;
         return list
@@ -117,7 +117,7 @@ class MentorshipRepositoryImpl implements MentorshipRepository {
   @override
   Future<void> cancelSession(String sessionId) async {
     try {
-      await _apiClient.dio.post('/mentorship/sessions/$sessionId/cancel');
+      await _apiClient.dio.post('/mentors/sessions/$sessionId/cancel');
     } on DioException catch (e) {
       throw _mapDioError(e);
     }
@@ -132,7 +132,7 @@ class MentorshipRepositoryImpl implements MentorshipRepository {
   }) async {
     try {
       await _apiClient.dio.post(
-        '/mentorship/sessions/$sessionId/reschedule',
+        '/mentors/sessions/$sessionId/reschedule',
         data: {
           'newStartTime': newStartTime.toUtc().toIso8601String(),
           'newEndTime': newEndTime.toUtc().toIso8601String(),
@@ -152,7 +152,7 @@ class MentorshipRepositoryImpl implements MentorshipRepository {
   }) async {
     try {
       await _apiClient.dio.post(
-        '/mentorship/sessions/$sessionId/feedback',
+        '/mentors/sessions/$sessionId/feedback',
         data: {
           'rating': rating,
           'comment': comment,
@@ -168,7 +168,7 @@ class MentorshipRepositoryImpl implements MentorshipRepository {
       String mentorId, List<String> matchedRules, String language,) async {
     try {
       final response = await _apiClient.dio.post(
-        '/mentorship/matches/$mentorId/explain',
+        '/mentors/matches/$mentorId/explain',
         data: {
           'matchedRules': matchedRules,
           'language': language,

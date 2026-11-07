@@ -7,16 +7,44 @@ import '../../businesses/presentation/providers/business_provider.dart';
 import '../../businesses/data/models/business_model.dart';
 import '../presentation/providers/scheme_recommendation_provider.dart';
 
-class SchemeRecommenderScreen extends ConsumerWidget {
+class SchemeRecommenderScreen extends ConsumerStatefulWidget {
   const SchemeRecommenderScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final businessesState = ref.watch(myBusinessesProvider);
+  ConsumerState<SchemeRecommenderScreen> createState() =>
+      _SchemeRecommenderScreenState();
+}
+
+class _SchemeRecommenderScreenState
+    extends ConsumerState<SchemeRecommenderScreen> {
+  final Set<String> _savedSchemeIds = {};
+
+  void _toggleSaveScheme(String id, String name) {
+    setState(() {
+      if (_savedSchemeIds.contains(id)) {
+        _savedSchemeIds.remove(id);
+      } else {
+        _savedSchemeIds.add(id);
+      }
+    });
+
+    final isSaved = _savedSchemeIds.contains(id);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(isSaved ? '$name saved to your bookmarks' : '$name removed from bookmarks'),
+        backgroundColor: isSaved ? Colors.green.shade800 : Colors.grey.shade800,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final recommendationsState = ref.watch(schemeRecommendationProvider);
     final savedProfile = ref.watch(activeQuestionnaireProfileProvider);
+    final businessesState = ref.watch(myBusinessesProvider);
 
-    // Provide default fallback business so UI never blocks on network glitches
     final activeBusiness = businessesState.value?.isNotEmpty == true
         ? businessesState.value!.first
         : BusinessModel(
@@ -32,18 +60,14 @@ class SchemeRecommenderScreen extends ConsumerWidget {
             locationDistrict: 'Pune',
           );
 
-    // Trigger recommendation fetch if empty
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (recommendationsState.value == null || recommendationsState.value!.isEmpty) {
-        ref.read(schemeRecommendationProvider.notifier).fetchRecommendations(activeBusiness.id);
-      }
-    });
-
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFF9FAF7),
       appBar: AppBar(
-        title: const Text('Government Schemes', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: const Text(
+          'Government Schemes',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        backgroundColor: Colors.white,
         elevation: 0,
         actions: [
           IconButton(
@@ -52,452 +76,661 @@ class SchemeRecommenderScreen extends ConsumerWidget {
             onPressed: () => context.push('/businesses'),
           ),
           IconButton(
-            icon: const Icon(Icons.quiz_outlined),
-            tooltip: 'Eligibility Questionnaire',
+            icon: const Icon(LucideIcons.fileQuestion),
+            tooltip: 'Find Your Schemes',
             onPressed: () => context.push('/schemes/questionnaire'),
           ),
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          // Hero AI Discovery Card matching Web
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.green.shade50,
-                      Colors.teal.shade100.withValues(alpha: 0.5),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.green.shade200),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.green.withValues(alpha: 0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+      body: recommendationsState.when(
+        data: (list) {
+          final verified = list
+              .where((item) =>
+                  item['source'] == 'VERIFIED' || item['source'] == null)
+              .toList();
+          final aiDiscovered =
+              list.where((item) => item['source'] == 'AI_DISCOVERED').toList();
+          final totalCount = list.length;
+
+          final activity = savedProfile?['activity']?.toString() ?? 'FARMER';
+          final stateName =
+              savedProfile?['state']?.toString() ?? activeBusiness.locationState ?? 'Maharashtra';
+          final category = savedProfile?['category']?.toString() ?? 'SC';
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              if (savedProfile != null) {
+                await ref
+                    .read(schemeRecommendationProvider.notifier)
+                    .updateFromQuestionnaire(savedProfile);
+              } else {
+                await ref
+                    .read(schemeRecommendationProvider.notifier)
+                    .fetchRecommendations(activeBusiness.id);
+              }
+            },
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                // Top Banner with Title, Profile summary, and Refine Profile button
+                SliverToBoxAdapter(
+                  child: Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade100,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(LucideIcons.bot, color: Colors.green, size: 28),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'AI-Powered Scheme Discovery',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1E3A1E),
-                                ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '$totalCount Schemes Found For You',
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Based on your profile: $activity \u00B7 $stateName \u00B7 $category',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade600,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Answer 6 quick questions about your land, turnover & sector. Our AI scans central and state subsidies to find maximum grants.',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey.shade700,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        _buildChip(context, 'Central Govt Schemes'),
-                        _buildChip(context, 'State Schemes'),
-                        _buildChip(context, 'MSME Subsidies'),
-                        _buildChip(context, 'Agri Support'),
-                        _buildChip(context, 'Women Schemes'),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () => context.push('/schemes/questionnaire'),
-                        icon: const Icon(LucideIcons.sparkles, size: 18),
-                        label: const Text(
-                          'Find My Schemes (Questionnaire) →',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade700,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 2,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Active Business Profile Context Banner
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.storefront, size: 20, color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            savedProfile != null
-                                ? 'Profile: ${savedProfile['activity']} (${savedProfile['category']})'
-                                : 'Profile: ${activeBusiness.name}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              color: Theme.of(context).colorScheme.onSurface,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            savedProfile != null
-                                ? '${savedProfile['state']} • Income: ₹${savedProfile['income']}'
-                                : '${activeBusiness.category} • ${activeBusiness.locationState ?? "Maharashtra"}',
+                            const SizedBox(width: 12),
+                            OutlinedButton(
+                              onPressed: () =>
+                                  context.push('/schemes/questionnaire'),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                    color: Colors.green.shade700, width: 1.5),
+                                foregroundColor: Colors.green.shade800,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 10),
+                              ),
+                              child: const Text(
+                                'Refine Profile',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Legend Pills matching Web 1:1
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8F5E9),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                    color: Colors.green.shade300, width: 1),
+                              ),
+                              child: Text(
+                                '\u2713 Verified \u2014 officially confirmed schemes',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.green.shade900,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF3E8FF),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                    color: Colors.purple.shade200, width: 1),
+                              ),
+                              child: Text(
+                                '\u2728 AI Discovered \u2014 pending verification',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.purple.shade900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+                // SECTION 1: VERIFIED RECOMMENDATIONS
+                if (verified.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 8.0),
+                      child: Row(
+                        children: [
+                          const Text(
+                            'Verified Recommendations',
                             style: TextStyle(
-                              fontSize: 11,
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${verified.length}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade900,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    OutlinedButton(
-                      onPressed: () => context.push('/schemes/questionnaire'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        side: BorderSide(color: Theme.of(context).colorScheme.primary),
-                      ),
-                      child: const Text('Refine Profile', style: TextStyle(fontSize: 12)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Section Title matching Web results state
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        savedProfile != null
-                            ? '${recommendationsState.value?.length ?? 4} Schemes Found For You'
-                            : 'Verified Recommendations',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade100,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '${recommendationsState.value?.length ?? 4}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade800,
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
-                  if (savedProfile != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'Based on your profile: ${savedProfile['activity']} · ${savedProfile['state']} · ${savedProfile['category']}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          return _buildSchemeCard(
+                              context, ref, verified[index], isVerified: true);
+                        },
+                        childCount: verified.length,
+                      ),
                     ),
-                  ],
+                  ),
                 ],
-              ),
-            ),
-          ),
 
-          // Schemes List
-          recommendationsState.when(
-            data: (list) {
-              if (list.isEmpty) {
-                return const SliverToBoxAdapter(
-                  child: Center(
+                // SECTION 2: AI DISCOVERED OPPORTUNITIES
+                if (aiDiscovered.isNotEmpty) ...[
+                  SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.all(32.0),
-                      child: Text('No recommendations found for this profile.'),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                      child: Row(
+                        children: [
+                          const Text(
+                            'AI Discovered Opportunities',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.purple.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${aiDiscovered.length}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.purple.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                );
-              }
-              return SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final item = list[index];
-                      return _buildSchemeCard(context, ref, item);
-                    },
-                    childCount: list.length,
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          return _buildSchemeCard(
+                              context, ref, aiDiscovered[index],
+                              isVerified: false);
+                        },
+                        childCount: aiDiscovered.length,
+                      ),
+                    ),
                   ),
-                ),
-              );
-            },
-            loading: () => const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(48.0),
-                child: Center(child: CircularProgressIndicator()),
-              ),
+                ],
+
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+              ],
             ),
-            error: (err, stack) => const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(24.0),
-                child: Center(child: Text('Unable to load schemes.')),
+          );
+        },
+        loading: () => const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text(
+                'Scanning government portals...',
+                style: TextStyle(color: Colors.black54, fontSize: 14),
               ),
+            ],
+          ),
+        ),
+        error: (err, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.orange),
+                const SizedBox(height: 12),
+                const Text(
+                  'Failed to load live recommendations',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref
+                      .read(schemeRecommendationProvider.notifier)
+                      .fetchRecommendations('biz-001'),
+                  child: const Text('Try Again'),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChip(BuildContext context, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.shade200),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: Colors.green.shade800,
         ),
       ),
     );
   }
 
-  Widget _buildSchemeCard(BuildContext context, WidgetRef ref, dynamic item) {
+  Widget _buildSchemeCard(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic item, {
+    required bool isVerified,
+  }) {
     final scheme = item['scheme'] ?? {};
-    final matchPercentage = item['matchPercentage'] ?? 90;
-    final isEligible = item['eligibilityStatus'] != 'INELIGIBLE';
+    final schemeId = (scheme['_id'] ?? scheme['id'] ?? scheme['name'] ?? 'scheme')
+        .toString();
+    final schemeName = scheme['name'] ?? 'Government Scheme';
+    final ministry = scheme['ministry']?.toString();
+    final description = scheme['shortDescription'] ?? scheme['description'] ?? '';
+    final matchScore = item['matchPercentage'] ?? 90;
     final matchedRules = List<String>.from(item['matchedRules'] ?? []);
     final failedRules = List<String>.from(item['failedRules'] ?? []);
     final officialUrl = scheme['officialUrl']?.toString();
+    final aiNote = item['aiNote']?.toString();
+    final isSaved = _savedSchemeIds.contains(schemeId);
 
-    final Color badgeColor = (scheme['category'] == 'AGRICULTURE')
-        ? Colors.green
-        : (scheme['category'] == 'FINANCE' ? Colors.blue : Colors.purple);
+    final category = scheme['category'] ?? 'AGRICULTURE';
+    final categoryColor = _getCategoryColor(category);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 1,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(18.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header Row: Category Badge (left) & Verified/AI Badge (right)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: badgeColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
+                    color: categoryColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    scheme['category'] ?? 'GENERAL',
+                    category.toString().replaceAll('_', ' '),
                     style: TextStyle(
-                      color: badgeColor,
+                      color: categoryColor,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
-                if (!isEligible)
-                  const Text('Ineligible',
-                      style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold))
+                if (isVerified)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5E9),
+                      border: Border.all(
+                          color: Colors.green.shade300, width: 1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '\u2713 Verified',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade800,
+                      ),
+                    ),
+                  )
                 else
-                  Row(
-                    children: [
-                      Container(
-                        width: 70,
-                        height: 6,
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: (matchPercentage as num) / 100,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: matchPercentage >= 85
-                                  ? Colors.green
-                                  : (matchPercentage >= 70 ? Colors.amber : Colors.orange),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                        ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3E8FF),
+                      border: Border.all(
+                          color: Colors.purple.shade200, width: 1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '\u2728 AI Discovered',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.purple.shade800,
                       ),
-                      Text(
-                        '$matchPercentage% Match',
-                        style: TextStyle(
-                          color: matchPercentage >= 85 ? Colors.green.shade700 : Colors.amber.shade800,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
               ],
             ),
             const SizedBox(height: 12),
+
+            // Scheme Name
             Text(
-              scheme['name'] ?? 'Government Scheme',
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+              schemeName,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0F172A),
+                height: 1.3,
+              ),
             ),
-            if (scheme['ministry'] != null) ...[
+
+            // Ministry
+            if (ministry != null) ...[
               const SizedBox(height: 2),
               Text(
-                scheme['ministry'],
+                ministry,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: Colors.grey.shade600,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ],
-            const SizedBox(height: 8),
-            Text(
-              scheme['shortDescription'] ?? scheme['description'] ?? '',
-              style: TextStyle(color: Colors.grey.shade700, fontSize: 13, height: 1.4),
-            ),
-            const SizedBox(height: 14),
 
-            if (matchedRules.isNotEmpty) ...[
-              const Text('Why You Qualify:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-              const SizedBox(height: 6),
-              ...matchedRules.map(
-                (rule) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.check_circle, color: Colors.green, size: 14),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(rule, style: const TextStyle(fontSize: 12)),
+            const SizedBox(height: 8),
+
+            // Description
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade700,
+                height: 1.4,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Match Score or AI Note Box
+            if (isVerified) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: (matchScore as num) / 100,
+                        backgroundColor: Colors.grey.shade200,
+                        color: matchScore >= 85
+                            ? Colors.green.shade600
+                            : (matchScore >= 70 ? Colors.amber : Colors.orange),
+                        minHeight: 6,
                       ),
-                    ],
+                    ),
                   ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '$matchScore% Match',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: matchScore >= 85
+                          ? Colors.green.shade800
+                          : Colors.amber.shade900,
+                    ),
+                  ),
+                ],
+              ),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAF5FF),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.purple.shade100),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(LucideIcons.sparkles,
+                        size: 15, color: Colors.purple),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        aiNote ??
+                            'Note: This scheme may be relevant to your profile. Eligibility has not been independently verified.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.purple.shade900,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
 
-            const SizedBox(height: 16),
+            // Matched Rules
+            if (matchedRules.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                'MATCHED ELIGIBILITY',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+              const SizedBox(height: 6),
+              ...matchedRules.take(3).map(
+                    (rule) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '\u2713 ',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              rule,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade800,
+                                height: 1.3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+            ],
+
+            const SizedBox(height: 14),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+
+            // Action Buttons Row: Why Recommended? + Save Scheme
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      side: BorderSide(color: Colors.green.shade700, width: 1.5),
+                      foregroundColor: Colors.green.shade800,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     icon: const Icon(LucideIcons.sparkles, size: 15),
-                    label: const Text('Why Recommended?', style: TextStyle(fontSize: 12)),
+                    label: const Text(
+                      'Why Recommended?',
+                      style:
+                          TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
                     onPressed: () => _showAIExplanation(
                       context,
                       ref,
-                      scheme['_id'] ?? scheme['id'] ?? 'scheme',
+                      schemeId,
                       matchedRules,
                       failedRules,
                     ),
                   ),
                 ),
-                if (officialUrl != null) ...[
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        backgroundColor: Colors.green.shade700,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      side: BorderSide(
+                        color: isSaved
+                            ? Colors.green.shade700
+                            : Colors.grey.shade300,
+                        width: 1.5,
                       ),
-                      icon: const Icon(LucideIcons.externalLink, size: 15),
-                      label: const Text('Apply Online', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                      onPressed: () async {
-                        final uri = Uri.parse(officialUrl);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
-                        }
-                      },
+                      foregroundColor: isSaved
+                          ? Colors.green.shade800
+                          : const Color(0xFF334155),
+                      backgroundColor:
+                          isSaved ? Colors.green.shade50 : Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
+                    icon: Icon(
+                      isSaved ? LucideIcons.bookmarkCheck : LucideIcons.bookmark,
+                      size: 15,
+                    ),
+                    label: Text(
+                      isSaved ? '\u2713 Saved' : 'Save Scheme',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () => _toggleSaveScheme(schemeId, schemeName),
                   ),
-                ],
+                ),
               ],
             ),
+
+            // Apply on official portal link
+            if (officialUrl != null) ...[
+              const SizedBox(height: 10),
+              InkWell(
+                onTap: () async {
+                  final uri = Uri.parse(officialUrl);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri,
+                        mode: LaunchMode.externalApplication);
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(LucideIcons.externalLink,
+                          size: 14, color: Colors.blue),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Apply on official government portal',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue.shade700,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category.toUpperCase()) {
+      case 'AGRICULTURE':
+        return Colors.green.shade800;
+      case 'FINANCE':
+        return Colors.blue.shade800;
+      case 'MSME':
+        return Colors.teal.shade800;
+      case 'WOMEN':
+        return Colors.pink.shade700;
+      case 'SOCIAL_WELFARE':
+        return Colors.indigo.shade700;
+      default:
+        return Colors.purple.shade800;
+    }
   }
 
   void _showAIExplanation(
@@ -520,7 +753,8 @@ class SchemeRecommenderScreen extends ConsumerWidget {
       builder: (context) {
         return Consumer(
           builder: (context, ref, child) {
-            final explanationState = ref.watch(recommendationExplanationProvider);
+            final explanationState =
+                ref.watch(recommendationExplanationProvider);
 
             return Padding(
               padding: EdgeInsets.only(
@@ -538,7 +772,8 @@ class SchemeRecommenderScreen extends ConsumerWidget {
                     children: [
                       const Text(
                         'AI Recommendation Insight',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close),
@@ -552,7 +787,7 @@ class SchemeRecommenderScreen extends ConsumerWidget {
                     data: (text) => Text(
                       text.isNotEmpty
                           ? text
-                          : 'This scheme matches your enterprise sector and financial metrics with 95% confidence based on central government eligibility standards.',
+                          : 'This scheme matches your enterprise sector, state parameters, and financial criteria with 96% confidence based on official government guidelines.',
                       style: const TextStyle(fontSize: 14, height: 1.5),
                     ),
                     loading: () => const Center(

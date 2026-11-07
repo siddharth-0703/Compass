@@ -63,7 +63,9 @@ class _SchemeQuestionnaireScreenState
     if (profile != null) {
       _activity = profile['activity']?.toString() ?? _activity;
       _state = profile['state']?.toString() ?? _state;
-      if (profile['income'] is num) _income = (profile['income'] as num).toInt();
+      if (profile['income'] is num) {
+        _income = (profile['income'] as num).toInt();
+      }
       _age = profile['age']?.toString() ?? _age;
       _gender = profile['gender']?.toString() ?? _gender;
       _category = profile['category']?.toString() ?? _category;
@@ -129,7 +131,7 @@ class _SchemeQuestionnaireScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Profile updated for $_category • $_activity in $_state!'),
+            content: Text('Profile updated for $_category \u00B7 $_activity in $_state!'),
             backgroundColor: Colors.green.shade800,
             behavior: SnackBarBehavior.floating,
           ),
@@ -166,7 +168,7 @@ class _SchemeQuestionnaireScreenState
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Text(
-                  'Step $_currentStep of $_totalSteps — ${_getStepTitle()}',
+                  'Step $_currentStep of $_totalSteps \u2014 ${_getStepTitle()}',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -233,7 +235,7 @@ class _SchemeQuestionnaireScreenState
         _buildOptionCard(
           value: 'FARMER',
           selectedValue: _activity,
-          icon: '🌾',
+          icon: '\u{1F33E}',
           title: 'Farmer / Agriculture',
           subtitle: 'Crop farming, horticulture, animal husbandry, dairy',
           onTap: () => setState(() => _activity = 'FARMER'),
@@ -241,7 +243,7 @@ class _SchemeQuestionnaireScreenState
         _buildOptionCard(
           value: 'ENTREPRENEUR',
           selectedValue: _activity,
-          icon: '🏪',
+          icon: '\u{1F3EA}',
           title: 'Entrepreneur / Business Owner',
           subtitle: 'Running or starting a micro-business or processing unit',
           onTap: () => setState(() => _activity = 'ENTREPRENEUR'),
@@ -249,7 +251,7 @@ class _SchemeQuestionnaireScreenState
         _buildOptionCard(
           value: 'ARTISAN',
           selectedValue: _activity,
-          icon: '🧵',
+          icon: '\u{1F9F5}',
           title: 'Artisan / Craftsperson',
           subtitle: 'Handicrafts, handloom, pottery, carpentry',
           onTap: () => setState(() => _activity = 'ARTISAN'),
@@ -257,7 +259,7 @@ class _SchemeQuestionnaireScreenState
         _buildOptionCard(
           value: 'STUDENT',
           selectedValue: _activity,
-          icon: '📚',
+          icon: '\u{1F4DA}',
           title: 'Student / Job Seeker',
           subtitle: 'Seeking skill training, subsidies or employment credit',
           onTap: () => setState(() => _activity = 'STUDENT'),
@@ -265,7 +267,7 @@ class _SchemeQuestionnaireScreenState
         _buildOptionCard(
           value: 'WOMEN_SHG',
           selectedValue: _activity,
-          icon: '👩',
+          icon: '\u{1F469}',
           title: 'Women SHG Member',
           subtitle: 'Part of a Self Help Group / Joint Liability Group',
           onTap: () => setState(() => _activity = 'WOMEN_SHG'),
@@ -280,63 +282,30 @@ class _SchemeQuestionnaireScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Which state are you located in? This helps find state-specific schemes.',
+          'Select your operational state for state-level subsidies.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.shade300, width: 2),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isExpanded: true,
               value: _states.contains(_state) ? _state : _states.first,
-              items: _states.map((s) {
+              items: _states.map((st) {
                 return DropdownMenuItem(
-                  value: s,
-                  child: Text(
-                    s,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
+                  value: st,
+                  child: Text(st, style: const TextStyle(fontSize: 15)),
                 );
               }).toList(),
               onChanged: (val) {
                 if (val != null) setState(() => _state = val);
               },
             ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.green.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.green.shade200),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.location_on, color: Colors.green.shade800, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Matching both Government of India & $_state state schemes.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.green.shade900,
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
       ],
@@ -349,33 +318,31 @@ class _SchemeQuestionnaireScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Approximate annual income or business turnover (in ₹). Many schemes have income limits.',
+          'What is your approximate annual household income?',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         const SizedBox(height: 20),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.shade300, width: 2),
+        TextField(
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            prefixText: '\u20B9 ',
+            labelText: 'Annual Income (in Rupees)',
+            hintText: '200000',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: TextField(
-            keyboardType: TextInputType.number,
-            controller: TextEditingController(text: _income.toString())
-              ..selection = TextSelection.collapsed(offset: _income.toString().length),
-            decoration: const InputDecoration(
-              icon: Text('₹', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black54)),
-              border: InputBorder.none,
-              hintText: 'e.g. 250000',
-            ),
-            onChanged: (val) {
-              final parsed = int.tryParse(val) ?? 0;
-              setState(() => _income = parsed);
-            },
-          ),
+          controller: TextEditingController(text: '$_income')
+            ..selection = TextSelection.collapsed(offset: '$_income'.length),
+          onChanged: (val) {
+            final parsed = int.tryParse(val);
+            if (parsed != null) setState(() => _income = parsed);
+          },
         ),
         const SizedBox(height: 16),
+        const Text(
+          'Or quick select bracket:',
+          style: TextStyle(fontSize: 12, color: Colors.black54),
+        ),
+        const SizedBox(height: 10),
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
@@ -384,10 +351,10 @@ class _SchemeQuestionnaireScreenState
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           children: [
-            _buildIncomeChip('Below ₹1L', 80000),
-            _buildIncomeChip('₹1L – ₹3L', 200000),
-            _buildIncomeChip('₹3L – ₹5L', 400000),
-            _buildIncomeChip('Above ₹5L', 600000),
+            _buildIncomeChip('Below \u20B91L', 80000),
+            _buildIncomeChip('\u20B91L \u2013 \u20B93L', 200000),
+            _buildIncomeChip('\u20B93L \u2013 \u20B95L', 400000),
+            _buildIncomeChip('Above \u20B95L', 600000),
           ],
         ),
       ],
@@ -434,21 +401,21 @@ class _SchemeQuestionnaireScreenState
         _buildOptionCard(
           value: '18-25',
           selectedValue: _age,
-          title: '18 – 25 years',
+          title: '18 \u2013 25 years',
           subtitle: 'Youth entrepreneur / recent graduate',
           onTap: () => setState(() => _age = '18-25'),
         ),
         _buildOptionCard(
           value: '26-40',
           selectedValue: _age,
-          title: '26 – 40 years',
+          title: '26 \u2013 40 years',
           subtitle: 'Prime working age / micro-enterprise expansion',
           onTap: () => setState(() => _age = '26-40'),
         ),
         _buildOptionCard(
           value: '41-60',
           selectedValue: _age,
-          title: '41 – 60 years',
+          title: '41 \u2013 60 years',
           subtitle: 'Experienced rural business operator',
           onTap: () => setState(() => _age = '41-60'),
         ),
@@ -476,7 +443,7 @@ class _SchemeQuestionnaireScreenState
         _buildOptionCard(
           value: 'FEMALE',
           selectedValue: _gender,
-          icon: '👩',
+          icon: '\u{1F469}',
           title: 'Female',
           subtitle: 'Women-specific schemes and interest rebates apply',
           onTap: () => setState(() => _gender = 'FEMALE'),
@@ -484,7 +451,7 @@ class _SchemeQuestionnaireScreenState
         _buildOptionCard(
           value: 'MALE',
           selectedValue: _gender,
-          icon: '👨',
+          icon: '\u{1F468}',
           title: 'Male',
           subtitle: 'General and targeted entrepreneurship schemes',
           onTap: () => setState(() => _gender = 'MALE'),
@@ -492,7 +459,7 @@ class _SchemeQuestionnaireScreenState
         _buildOptionCard(
           value: 'OTHER',
           selectedValue: _gender,
-          icon: '⚧',
+          icon: '\u26A5',
           title: 'Other / Prefer not to say',
           subtitle: 'Inclusive central and state government benefits',
           onTap: () => setState(() => _gender = 'OTHER'),
@@ -562,7 +529,9 @@ class _SchemeQuestionnaireScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: isSelected ? Colors.green.shade50.withValues(alpha: 0.5) : Colors.white,
+        color: isSelected
+            ? Colors.green.shade50.withValues(alpha: 0.5)
+            : Colors.white,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
@@ -572,7 +541,8 @@ class _SchemeQuestionnaireScreenState
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isSelected ? Colors.green.shade600 : Colors.grey.shade300,
+                color:
+                    isSelected ? Colors.green.shade600 : Colors.grey.shade300,
                 width: isSelected ? 2 : 1.5,
               ),
             ),
@@ -592,13 +562,16 @@ class _SchemeQuestionnaireScreenState
                     title,
                     style: TextStyle(
                       fontSize: 15,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                      color: isSelected ? Colors.green.shade900 : Colors.black87,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.w600,
+                      color:
+                          isSelected ? Colors.green.shade900 : Colors.black87,
                     ),
                   ),
                 ),
                 if (isSelected)
-                  const Icon(LucideIcons.checkCircle, color: Colors.green, size: 20),
+                  const Icon(LucideIcons.checkCircle,
+                      color: Colors.green, size: 20),
               ],
             ),
           ),
@@ -620,7 +593,9 @@ class _SchemeQuestionnaireScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: isSelected ? Colors.green.shade50.withValues(alpha: 0.5) : Colors.white,
+        color: isSelected
+            ? Colors.green.shade50.withValues(alpha: 0.5)
+            : Colors.white,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
@@ -630,7 +605,8 @@ class _SchemeQuestionnaireScreenState
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isSelected ? Colors.green.shade600 : Colors.grey.shade300,
+                color:
+                    isSelected ? Colors.green.shade600 : Colors.grey.shade300,
                 width: isSelected ? 2 : 1.5,
               ),
             ),
@@ -649,8 +625,10 @@ class _SchemeQuestionnaireScreenState
                         title,
                         style: TextStyle(
                           fontSize: 15,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                          color: isSelected ? Colors.green.shade900 : Colors.black87,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.w600,
+                          color:
+                              isSelected ? Colors.green.shade900 : Colors.black87,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -666,7 +644,8 @@ class _SchemeQuestionnaireScreenState
                   ),
                 ),
                 if (isSelected)
-                  const Icon(LucideIcons.checkCircle, color: Colors.green, size: 20),
+                  const Icon(LucideIcons.checkCircle,
+                      color: Colors.green, size: 20),
               ],
             ),
           ),
@@ -688,8 +667,10 @@ class _SchemeQuestionnaireScreenState
           if (_currentStep > 1)
             OutlinedButton(
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () => setState(() => _currentStep--),
               child: const Text('Back'),
@@ -698,16 +679,19 @@ class _SchemeQuestionnaireScreenState
             const SizedBox.shrink(),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
               backgroundColor: Colors.green.shade700,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               elevation: 2,
             ),
             onPressed: _canProceed() ? _onNext : null,
             child: Text(
-              _currentStep < _totalSteps ? 'Continue' : 'Find My Schemes →',
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              _currentStep < _totalSteps ? 'Continue' : 'Find My Schemes \u2192',
+              style:
+                  const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
           ),
         ],

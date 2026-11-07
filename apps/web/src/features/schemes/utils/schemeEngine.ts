@@ -431,3 +431,4 @@ export function getFallbackExplanation(schemeName: string, profile?: any): strin
   }
   return `This scheme matches your enterprise sector in ${state} and your ${category} social category criteria with high confidence under official central and state government guidelines.`;
 }
+

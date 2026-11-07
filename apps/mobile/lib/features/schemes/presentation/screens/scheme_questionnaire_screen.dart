@@ -19,7 +19,7 @@ class _SchemeQuestionnaireScreenState
 
   String? _activity = 'FARMER';
   String _state = 'Maharashtra';
-  int _income = 200000;
+  int _income = 80000;
   String? _age = '26-40';
   String? _gender = 'MALE';
   String? _category = 'SC';

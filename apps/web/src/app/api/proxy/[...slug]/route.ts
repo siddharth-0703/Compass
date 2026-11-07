@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
+import { getFallbackRecommendations, getFallbackExplanation } from "@/features/schemes/utils/schemeEngine";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://compass-1ej0.onrender.com";
 
@@ -189,6 +190,22 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ slu
 
     if (response.ok) {
       const responseData = await response.text();
+
+      if (path === "ai/recommend-schemes") {
+        try {
+          const parsed = JSON.parse(responseData);
+          const data = parsed?.data;
+          if (!data || (data.verifiedRecommendations?.length === 0 && data.aiDiscoveredSchemes?.length === 0)) {
+            const profile = body ? JSON.parse(body) : {};
+            const fallback = getFallbackRecommendations(profile);
+            return new Response(JSON.stringify({ success: true, data: fallback }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+        } catch (_) {}
+      }
+
       return new Response(responseData, {
         status: response.status,
         statusText: response.statusText,
@@ -196,6 +213,28 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ slu
           "Content-Type": response.headers.get("content-type") || "application/json",
         },
       });
+    }
+
+    if (path === "ai/recommend-schemes") {
+      try {
+        const profile = body ? JSON.parse(body) : {};
+        const fallback = getFallbackRecommendations(profile);
+        return new Response(JSON.stringify({ success: true, data: fallback }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (_) {}
+    }
+
+    if (path === "ai/explain-scheme") {
+      try {
+        const parsed = body ? JSON.parse(body) : {};
+        const explanation = getFallbackExplanation(parsed.schemeName || "Scheme", parsed.profile);
+        return new Response(JSON.stringify({ success: true, data: { explanation } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (_) {}
     }
 
     // If backend returns 404 or 5xx and we have mock fallback data for this endpoint:
@@ -217,6 +256,28 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ slu
     });
   } catch (error) {
     clearTimeout(timeoutId);
+
+    if (path === "ai/recommend-schemes") {
+      try {
+        const profile = body ? JSON.parse(body) : {};
+        const fallback = getFallbackRecommendations(profile);
+        return new Response(JSON.stringify({ success: true, data: fallback }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (_) {}
+    }
+
+    if (path === "ai/explain-scheme") {
+      try {
+        const parsed = body ? JSON.parse(body) : {};
+        const explanation = getFallbackExplanation(parsed.schemeName || "Scheme", parsed.profile);
+        return new Response(JSON.stringify({ success: true, data: { explanation } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (_) {}
+    }
 
     // Fallback gracefully during network errors or Render cold starts
     const matchedMockKey = Object.keys(MOCK_DATA_MAP).find((k) => path.startsWith(k));

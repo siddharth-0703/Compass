@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/storage/hive_storage.dart';
 import 'core/router/app_router.dart';
 import 'core/network/sync_manager.dart';
+import 'core/theme/theme_provider.dart';
 import 'core/theme/app_theme.dart';
 
 void main() async {
@@ -28,12 +29,13 @@ class RuralEntrepreneurApp extends ConsumerWidget {
     // Watch syncManagerProvider to initialize the background sync listener
     ref.watch(syncManagerProvider);
 
-    // You could also watch the theme provider here if implemented
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       title: 'Rural Entrepreneur App',
       theme: AppTheme.lightTheme,
-      themeMode: ThemeMode.light, // Using light theme by default for consistency with web
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

@@ -99,6 +99,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  void updateUser(UserModel updatedUser) {
+    state = state.copyWith(user: updatedUser);
+  }
+
   Future<void> logout() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {

@@ -100,4 +100,40 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: const ColorScheme.dark(
+        primary: primaryDark,
+        onPrimary: primaryForegroundDark,
+        secondary: secondaryDark,
+        surface: backgroundDark,
+        onSurface: foregroundDark,
+        error: destructiveDark,
+        onError: Colors.white,
+      ),
+      scaffoldBackgroundColor: backgroundDark,
+      textTheme: GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme).apply(
+        bodyColor: foregroundDark,
+        displayColor: foregroundDark,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: backgroundDark,
+        foregroundColor: foregroundDark,
+        elevation: 0,
+        centerTitle: true,
+        surfaceTintColor: Colors.transparent,
+      ),
+      cardTheme: CardThemeData(
+        color: cardDark,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(borderRadiusLg),
+          side: const BorderSide(color: borderDark, width: 1),
+        ),
+      ),
+    );
+  }
 }

@@ -19,6 +19,7 @@ import '../../features/businesses/presentation/screens/business_list_screen.dart
 import '../../features/businesses/presentation/screens/register_business_screen.dart';
 import '../../features/market/presentation/screens/market_prices_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/settings/presentation/screens/profile_screen.dart';
 import '../../features/analytics/presentation/screens/analytics_screen.dart';
 import '../../features/observability/presentation/screens/observability_screen.dart';
 import '../../features/moderation/presentation/screens/content_moderation_screen.dart';
@@ -64,7 +65,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final courseId = state.pathParameters['courseId']!;
           final lessonId = state.uri.queryParameters['lessonId'];
           return CoursePlayerScreen(
-              courseId: courseId, initialLessonId: lessonId);
+            courseId: courseId,
+            initialLessonId: lessonId,
+          );
         },
       ),
       GoRoute(
@@ -106,6 +109,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/settings',
         name: 'settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/profile',
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/settings/sync',

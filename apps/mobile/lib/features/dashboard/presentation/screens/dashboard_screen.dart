@@ -175,9 +175,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     },
                     selected: _currentIndex == 0,
                   ),
+                  _buildDrawerItem(
+                    icon: LucideIcons.barChart2,
+                    title: 'Analytics',
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/analytics');
+                    },
+                    selected: false,
+                  ),
                   const SizedBox(height: 16),
                   
                   _buildDrawerGroup('MANAGEMENT'),
+                  _buildDrawerItem(
+                    icon: LucideIcons.users,
+                    title: 'Users',
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/users');
+                    },
+                    selected: false,
+                  ),
                   _buildDrawerItem(
                     icon: LucideIcons.building2,
                     title: 'Businesses',
@@ -192,7 +210,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     title: 'Mentorship',
                     onTap: () {
                       Navigator.pop(context);
-                      context.push('/mentors'); // Navigates out of IndexedStack for now
+                      context.push('/mentors');
                     },
                     selected: false,
                   ),
@@ -210,13 +228,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     title: 'Market Prices',
                     onTap: () {
                       Navigator.pop(context);
-                      context.push('/market'); // Navigates out of IndexedStack for now
+                      context.push('/market');
                     },
                     selected: false,
                   ),
                   const SizedBox(height: 16),
 
                   _buildDrawerGroup('AI & CONTENT'),
+                  _buildDrawerItem(
+                    icon: LucideIcons.shieldCheck,
+                    title: 'Moderation',
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/moderation');
+                    },
+                    selected: false,
+                  ),
                   _buildDrawerItem(
                     icon: LucideIcons.bookOpen,
                     title: 'Learning Hub',
@@ -229,6 +256,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   const SizedBox(height: 16),
 
                   _buildDrawerGroup('SYSTEM'),
+                  _buildDrawerItem(
+                    icon: LucideIcons.activity,
+                    title: 'Observability',
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/observability');
+                    },
+                    selected: false,
+                  ),
                   _buildDrawerItem(
                     icon: LucideIcons.settings,
                     title: 'Settings',

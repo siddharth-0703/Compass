@@ -1,7 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// Screens will be imported later
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -17,8 +16,13 @@ import '../../features/mentorship/presentation/screens/mentor_match_screen.dart'
 import '../../features/mentorship/presentation/screens/mentor_detail_screen.dart';
 import '../../features/mentorship/presentation/screens/my_sessions_screen.dart';
 import '../../features/businesses/presentation/screens/business_list_screen.dart';
+import '../../features/businesses/presentation/screens/register_business_screen.dart';
 import '../../features/market/presentation/screens/market_prices_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/analytics/presentation/screens/analytics_screen.dart';
+import '../../features/observability/presentation/screens/observability_screen.dart';
+import '../../features/moderation/presentation/screens/content_moderation_screen.dart';
+import '../../features/users/presentation/screens/user_management_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -60,7 +64,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final courseId = state.pathParameters['courseId']!;
           final lessonId = state.uri.queryParameters['lessonId'];
           return CoursePlayerScreen(
-              courseId: courseId, initialLessonId: lessonId,);
+              courseId: courseId, initialLessonId: lessonId);
         },
       ),
       GoRoute(
@@ -69,9 +73,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const BusinessListScreen(),
       ),
       GoRoute(
+        path: '/businesses/new',
+        name: 'register_business',
+        builder: (context, state) => const RegisterBusinessScreen(),
+      ),
+      GoRoute(
         path: '/market',
         name: 'market',
         builder: (context, state) => const MarketPricesScreen(),
+      ),
+      GoRoute(
+        path: '/analytics',
+        name: 'analytics',
+        builder: (context, state) => const AnalyticsScreen(),
+      ),
+      GoRoute(
+        path: '/observability',
+        name: 'observability',
+        builder: (context, state) => const ObservabilityScreen(),
+      ),
+      GoRoute(
+        path: '/moderation',
+        name: 'moderation',
+        builder: (context, state) => const ContentModerationScreen(),
+      ),
+      GoRoute(
+        path: '/users',
+        name: 'users',
+        builder: (context, state) => const UserManagementScreen(),
       ),
       GoRoute(
         path: '/settings',
@@ -118,7 +147,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) {
-      final isAuthPage = state.uri.path == '/login' || state.uri.path == '/signup';
+      final isAuthPage =
+          state.uri.path == '/login' || state.uri.path == '/signup';
       final isLoggedIn = authState.user != null;
 
       // If not logged in and not on auth page, redirect to login
@@ -127,7 +157,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // If logged in and on auth page, redirect to dashboard
       if (isLoggedIn && isAuthPage) return '/';
 
-      return null; // No redirect needed
+      return null;
     },
   );
 });

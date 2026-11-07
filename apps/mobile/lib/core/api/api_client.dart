@@ -14,11 +14,11 @@ class ApiClient {
           BaseOptions(
             baseUrl: const String.fromEnvironment(
               'API_URL',
-              defaultValue: 'http://10.0.2.2:4000/api/v1', // 10.0.2.2 maps to localhost in Android Emulator
+              defaultValue: 'https://compass-1ej0.onrender.com/api/v1',
             ),
-            connectTimeout: const Duration(seconds: 60),
-            receiveTimeout: const Duration(seconds: 60),
-            sendTimeout: const Duration(seconds: 60),
+            connectTimeout: const Duration(seconds: 10),
+            receiveTimeout: const Duration(seconds: 10),
+            sendTimeout: const Duration(seconds: 10),
             headers: {'Content-Type': 'application/json'},
           ),
         ) {

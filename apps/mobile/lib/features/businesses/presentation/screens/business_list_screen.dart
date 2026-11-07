@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/business_provider.dart';
 
 class BusinessListScreen extends ConsumerWidget {
@@ -11,7 +12,20 @@ class BusinessListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Businesses', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('My Businesses',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_business_outlined),
+            tooltip: 'Register New Business',
+            onPressed: () => context.push('/businesses/new'),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/businesses/new'),
+        icon: const Icon(Icons.add),
+        label: const Text('Register Business'),
       ),
       body: businessesAsyncValue.when(
         data: (businesses) {
@@ -20,22 +34,32 @@ class BusinessListScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.storefront_outlined, size: 64, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+                  Icon(Icons.storefront_outlined,
+                      size: 64,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.5)),
                   const SizedBox(height: 16),
                   Text(
                     'No businesses found',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Get started by registering your first business.',
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+                    style: TextStyle(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.6)),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Business registration coming soon')));
-                    },
+                    onPressed: () => context.push('/businesses/new'),
                     child: const Text('Register Business'),
                   ),
                 ],
@@ -48,8 +72,12 @@ class BusinessListScreen extends ConsumerWidget {
             itemCount: businesses.length,
             itemBuilder: (context, index) {
               final business = businesses[index];
+              final isVerified = business.status.toLowerCase() == 'verified';
+
               return Card(
                 margin: const EdgeInsets.only(bottom: 16.0),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -61,20 +89,31 @@ class BusinessListScreen extends ConsumerWidget {
                           Expanded(
                             child: Text(
                               business.name,
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: business.status == 'Verified' ? Colors.green.shade100 : Colors.orange.shade100,
+                              color: isVerified
+                                  ? Colors.green.withValues(alpha: 0.15)
+                                  : Colors.orange.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isVerified
+                                    ? Colors.green.withValues(alpha: 0.3)
+                                    : Colors.orange.withValues(alpha: 0.3),
+                              ),
                             ),
                             child: Text(
                               business.status,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: business.status == 'Verified' ? Colors.green.shade800 : Colors.orange.shade800,
+                                color: isVerified
+                                    ? Colors.green.shade700
+                                    : Colors.orange.shade800,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -82,18 +121,34 @@ class BusinessListScreen extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(business.description, maxLines: 2, overflow: TextOverflow.ellipsis),
+                      Text(business.description,
+                          maxLines: 2, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          Icon(Icons.category_outlined, size: 16, color: Theme.of(context).colorScheme.primary),
+                          Icon(Icons.category_outlined,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.primary),
                           const SizedBox(width: 4),
-                          Text(business.category, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w500)),
+                          Text(business.category,
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w500)),
                           const Spacer(),
                           if (business.locationDistrict != null) ...[
-                            Icon(Icons.location_on_outlined, size: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+                            Icon(Icons.location_on_outlined,
+                                size: 16,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.6)),
                             const SizedBox(width: 4),
-                            Text('${business.locationDistrict}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+                            Text('${business.locationDistrict}, ${business.locationState ?? ""}',
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.6))),
                           ],
                         ],
                       ),
@@ -113,9 +168,19 @@ class BusinessListScreen extends ConsumerWidget {
               children: [
                 const Icon(Icons.error_outline, size: 48, color: Colors.red),
                 const SizedBox(height: 16),
-                Text('Failed to load businesses', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+                Text('Failed to load businesses',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface)),
                 const SizedBox(height: 8),
-                Text(error.toString().replaceAll('Exception: ', ''), textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+                Text(error.toString().replaceAll('Exception: ', ''),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.6))),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () => ref.refresh(myBusinessesProvider),

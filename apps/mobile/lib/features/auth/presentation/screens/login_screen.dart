@@ -96,6 +96,74 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ],
                     ),
                     const SizedBox(height: 32),
+                    // 1-Click Instant Demo Login Banner
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.green.shade700,
+                            Colors.teal.shade600,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.green.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: authState.isLoading
+                              ? null
+                              : () {
+                                  _emailController.text =
+                                      'siddharthjaiswar9107@gmail.com';
+                                  _passwordController.text = 'Sid@1234567';
+                                  _login();
+                                },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            child: Row(
+                              children: [
+                                const Text('⚡', style: TextStyle(fontSize: 22)),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: const [
+                                      Text(
+                                        'Instant Demo Login (1-Click)',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Siddharth Jaiswar • Production Account',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(Icons.arrow_forward_ios,
+                                    color: Colors.white, size: 16),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                     if (authState.error != null)
                       Container(
                         padding: const EdgeInsets.all(12),

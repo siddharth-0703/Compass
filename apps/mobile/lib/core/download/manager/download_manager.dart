@@ -8,14 +8,18 @@ import '../services/downloader.dart';
 import '../services/file_integrity.dart';
 import '../services/storage_manager.dart';
 import '../../storage/hive_storage.dart';
-import '../../../features/auth/presentation/providers/auth_provider.dart';
+
+import 'package:dio/dio.dart';
 
 final downloadManagerProvider = Provider<DownloadManager>((ref) {
-  // Use a dedicated Dio instance without interceptors that might block large files or add token logic where unnecessary,
-  // or reuse the core one if authentication is needed to download. We'll reuse the core one for MVP.
-  final dio = ref.watch(apiClientProvider).dio;
+  final downloadDio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(minutes: 5),
+    ),
+  );
   return DownloadManager(
-    Downloader(dio),
+    Downloader(downloadDio),
     StorageManager(),
     FileIntegrity(),
   );

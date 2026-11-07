@@ -100,8 +100,11 @@ class ApiClient {
       } catch (error) {
         _isRefreshing = false;
         _refreshQueue.clear();
-        await _secureStorage.clearTokens();
-        // Navigation to login should be handled by the router listener
+        if (error is DioException &&
+            (error.response?.statusCode == 401 ||
+                error.response?.statusCode == 403)) {
+          await _secureStorage.clearTokens();
+        }
         return handler.next(e);
       }
     } else {

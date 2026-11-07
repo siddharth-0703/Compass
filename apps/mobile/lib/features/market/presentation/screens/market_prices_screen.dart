@@ -15,6 +15,7 @@ class MarketPricesScreen extends ConsumerWidget {
     
     final statesAsync = ref.watch(marketStatesProvider);
     final commoditiesAsync = ref.watch(marketCommoditiesProvider(notifier.currentState));
+    final marketsAsync = ref.watch(marketMarketsProvider(notifier.currentState));
     
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -86,65 +87,134 @@ class MarketPricesScreen extends ConsumerWidget {
                           const SizedBox(height: 24),
                           
                           // Form Fields
-                          Text('State', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
+                          Text('State',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).colorScheme.onSurface)),
                           const SizedBox(height: 8),
                           statesAsync.when(
                             data: (states) => DropdownButtonFormField<String>(
-                              initialValue: states.contains(notifier.currentState) ? notifier.currentState : null,
+                              value: states.contains(notifier.currentState)
+                                  ? notifier.currentState
+                                  : null,
                               decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                                  borderSide: BorderSide(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outlineVariant),
                                 ),
                                 hintText: 'Select State',
                               ),
-                              items: states.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                              items: states
+                                  .map((s) => DropdownMenuItem(
+                                      value: s, child: Text(s)))
+                                  .toList(),
                               onChanged: (val) {
-                                if (val != null) notifier.fetchPrices(state: val);
+                                if (val != null) {
+                                  notifier.fetchPrices(state: val);
+                                }
                               },
                             ),
-                            loading: () => const Center(child: CircularProgressIndicator()),
+                            loading: () => const Center(
+                                child: CircularProgressIndicator()),
                             error: (_, __) => const Text('Failed to load states'),
                           ),
                           const SizedBox(height: 16),
                           
-                          Text('Commodity', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
+                          Text('Commodity',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).colorScheme.onSurface)),
                           const SizedBox(height: 8),
                           commoditiesAsync.when(
                             data: (commodities) => DropdownButtonFormField<String>(
-                              initialValue: commodities.contains(notifier.currentCommodity) ? notifier.currentCommodity : null,
+                              value: commodities.contains(notifier.currentCommodity)
+                                  ? notifier.currentCommodity
+                                  : null,
                               decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                                  borderSide: BorderSide(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outlineVariant),
                                 ),
-                                hintText: 'Select Commodity',
+                                hintText: 'Select Crop',
                               ),
                               items: [
-                                const DropdownMenuItem<String>(value: null, child: Text('All Commodities')),
-                                ...commodities.map((c) => DropdownMenuItem(value: c, child: Text(c))),
+                                const DropdownMenuItem<String>(
+                                    value: null, child: Text('All Commodities')),
+                                ...commodities.map((c) =>
+                                    DropdownMenuItem(value: c, child: Text(c))),
                               ],
                               onChanged: (val) {
                                 notifier.fetchPrices(commodity: val);
                               },
                             ),
-                            loading: () => const Center(child: CircularProgressIndicator()),
-                            error: (_, __) => const Text('Failed to load commodities'),
+                            loading: () => const Center(
+                                child: CircularProgressIndicator()),
+                            error: (_, __) =>
+                                const Text('Failed to load commodities'),
+                          ),
+                          const SizedBox(height: 16),
+
+                          Text('Market (APMC)',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).colorScheme.onSurface)),
+                          const SizedBox(height: 8),
+                          marketsAsync.when(
+                            data: (markets) => DropdownButtonFormField<String>(
+                              value: markets.contains(notifier.currentMarket)
+                                  ? notifier.currentMarket
+                                  : null,
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outlineVariant),
+                                ),
+                                hintText: 'Select Market',
+                              ),
+                              items: markets.map((m) =>
+                                  DropdownMenuItem(value: m, child: Text(m))).toList(),
+                              onChanged: (val) {
+                                notifier.fetchPrices(market: val);
+                              },
+                            ),
+                            loading: () => const Center(
+                                child: CircularProgressIndicator()),
+                            error: (_, __) =>
+                                const Text('Failed to load markets'),
                           ),
                           const SizedBox(height: 24),
                           
                           ElevatedButton.icon(
                             onPressed: () => notifier.fetchPrices(),
                             icon: const Icon(LucideIcons.refreshCw, size: 18),
-                            label: const Text('Check Prices'),
+                            label: const Text('Check Prices',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold)),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
-                              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                              backgroundColor: Colors.green.shade700,
+                              foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                              elevation: 2,
                             ),
                           ),
                         ],
@@ -209,26 +279,33 @@ class MarketPricesScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.shade200),
+                    color: Colors.amber.shade50,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.amber.shade200),
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Column(
                     children: [
-                      const Icon(LucideIcons.alertCircle, color: Colors.red),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
-                            const SizedBox(height: 4),
-                            Text(err.toString().replaceAll('Exception: ', ''), style: const TextStyle(fontSize: 14, color: Colors.red)),
-                          ],
-                        ),
+                      Row(
+                        children: [
+                          Icon(LucideIcons.info, color: Colors.amber.shade800),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Showing offline cached APMC Mandi rates.',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amber.shade900),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => notifier.fetchPrices(),
+                        icon: const Icon(LucideIcons.refreshCw, size: 16),
+                        label: const Text('Refresh Rates'),
                       ),
                     ],
                   ),

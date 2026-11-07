@@ -3,11 +3,10 @@ import '../../../../core/api/api_client.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../../data/models/business_model.dart';
 import '../../data/repositories/business_repository.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 final businessRepositoryProvider = Provider<BusinessRepository>((ref) {
-  // Using the shared api client
-  final secureStorage = SecureStorage();
-  final apiClient = ApiClient(secureStorage);
+  final apiClient = ref.watch(apiClientProvider);
   return BusinessRepository(apiClient);
 });
 

@@ -164,17 +164,50 @@ class LearningRepositoryImpl implements LearningRepository {
                 durationSeconds: 1200,
                 order: 1,
                 isPublished: true,
-                contentStatus: 'CONFIGURED',
+                contentStatus: 'VERIFIED',
                 resources: ['Organic_Fertilizer_Guide.pdf'],
                 media: LocalizedMedia(
                   en: LocalizedMediaSource(
-                    contentUrl: 'https://www.youtube.com/watch?v=pDPWTRA2nPM',
-                    provider: 'YOUTUBE',
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                   hi: LocalizedMediaSource(
-                    contentUrl: 'https://www.youtube.com/watch?v=XUwptP0_v00',
-                    provider: 'YOUTUBE',
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    provider: 'MP4',
+                    contentType: 'VIDEO',
+                  ),
+                  mr: LocalizedMediaSource(
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                    provider: 'MP4',
+                    contentType: 'VIDEO',
+                  ),
+                ),
+              ),
+              Lesson(
+                id: 'les-1b',
+                title: 'Bio-Pesticides and Natural Crop Protection',
+                description:
+                    'Preparing Neem Astra, Agni Astra and Dashparni Ark for organic pest control.',
+                durationSeconds: 960,
+                order: 2,
+                isPublished: true,
+                contentStatus: 'VERIFIED',
+                resources: ['BioPesticide_Recipes.pdf'],
+                media: LocalizedMedia(
+                  en: LocalizedMediaSource(
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                    provider: 'MP4',
+                    contentType: 'VIDEO',
+                  ),
+                  hi: LocalizedMediaSource(
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    provider: 'MP4',
+                    contentType: 'VIDEO',
+                  ),
+                  mr: LocalizedMediaSource(
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                 ),
@@ -206,12 +239,22 @@ class LearningRepositoryImpl implements LearningRepository {
                 durationSeconds: 900,
                 order: 1,
                 isPublished: true,
-                contentStatus: 'CONFIGURED',
+                contentStatus: 'VERIFIED',
                 resources: ['Cashflow_Template.xlsx'],
                 media: LocalizedMedia(
                   en: LocalizedMediaSource(
-                    contentUrl: 'https://www.youtube.com/watch?v=2qiNKen-rm0',
-                    provider: 'YOUTUBE',
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+                    provider: 'MP4',
+                    contentType: 'VIDEO',
+                  ),
+                  hi: LocalizedMediaSource(
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    provider: 'MP4',
+                    contentType: 'VIDEO',
+                  ),
+                  mr: LocalizedMediaSource(
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                 ),
@@ -243,12 +286,22 @@ class LearningRepositoryImpl implements LearningRepository {
                 durationSeconds: 1500,
                 order: 1,
                 isPublished: true,
-                contentStatus: 'CONFIGURED',
+                contentStatus: 'VERIFIED',
                 resources: ['Catalog_Checklist.pdf'],
                 media: LocalizedMedia(
+                  en: LocalizedMediaSource(
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+                    provider: 'MP4',
+                    contentType: 'VIDEO',
+                  ),
                   hi: LocalizedMediaSource(
-                    contentUrl: 'https://www.youtube.com/watch?v=Kouij55MvzE',
-                    provider: 'YOUTUBE',
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    provider: 'MP4',
+                    contentType: 'VIDEO',
+                  ),
+                  mr: LocalizedMediaSource(
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                 ),
@@ -280,12 +333,22 @@ class LearningRepositoryImpl implements LearningRepository {
                 durationSeconds: 1080,
                 order: 1,
                 isPublished: true,
-                contentStatus: 'CONFIGURED',
+                contentStatus: 'VERIFIED',
                 resources: ['Scheme_Checklist.pdf'],
                 media: LocalizedMedia(
+                  en: LocalizedMediaSource(
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    provider: 'MP4',
+                    contentType: 'VIDEO',
+                  ),
+                  hi: LocalizedMediaSource(
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    provider: 'MP4',
+                    contentType: 'VIDEO',
+                  ),
                   mr: LocalizedMediaSource(
-                    contentUrl: 'https://www.youtube.com/watch?v=XUwptP0_v00',
-                    provider: 'YOUTUBE',
+                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                    provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                 ),

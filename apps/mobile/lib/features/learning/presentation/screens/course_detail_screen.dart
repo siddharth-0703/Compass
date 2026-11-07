@@ -21,9 +21,9 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
         task.state == DownloadState.cancelled) {
       ref.read(downloadTasksProvider.notifier).enqueue(
             courseId,
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
             'course_$courseId.mp4',
-            158000000,
+            1048576,
           );
     } else if (task.state == DownloadState.downloading ||
         task.state == DownloadState.queued) {

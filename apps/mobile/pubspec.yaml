@@ -49,6 +49,7 @@ dependencies:
   speech_to_text: any
   flutter_tts: any
   lucide_icons_flutter: ^3.1.20
+  video_player: ^2.14.1
 
 dev_dependencies:
   flutter_test:

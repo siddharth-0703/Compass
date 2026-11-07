@@ -55,9 +55,11 @@ class LearningRepositoryImpl implements LearningRepository {
       final cached = box.get('progress_list_$courseId') as List?;
       if (cached != null) {
         return cached
-            .map((json) =>
-                LessonProgressModel.fromJson(Map<String, dynamic>.from(json))
-                    .toEntity())
+            .map(
+              (json) => LessonProgressModel.fromJson(
+                Map<String, dynamic>.from(json),
+              ).toEntity(),
+            )
             .toList();
       }
       return [];
@@ -83,7 +85,8 @@ class LearningRepositoryImpl implements LearningRepository {
     );
 
     final list = List<Map<String, dynamic>>.from(
-        cachedList.map((item) => Map<String, dynamic>.from(item)));
+      cachedList.map((item) => Map<String, dynamic>.from(item)),
+    );
     final index =
         list.indexWhere((item) => item['lessonId'] == progress.lessonId);
 
@@ -168,17 +171,17 @@ class LearningRepositoryImpl implements LearningRepository {
                 resources: ['Organic_Fertilizer_Guide.pdf'],
                 media: LocalizedMedia(
                   en: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                   hi: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                   mr: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
@@ -196,17 +199,17 @@ class LearningRepositoryImpl implements LearningRepository {
                 resources: ['BioPesticide_Recipes.pdf'],
                 media: LocalizedMedia(
                   en: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                   hi: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                   mr: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
@@ -243,17 +246,17 @@ class LearningRepositoryImpl implements LearningRepository {
                 resources: ['Cashflow_Template.xlsx'],
                 media: LocalizedMedia(
                   en: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                   hi: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                   mr: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
@@ -290,17 +293,17 @@ class LearningRepositoryImpl implements LearningRepository {
                 resources: ['Catalog_Checklist.pdf'],
                 media: LocalizedMedia(
                   en: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                   hi: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                   mr: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
@@ -337,17 +340,17 @@ class LearningRepositoryImpl implements LearningRepository {
                 resources: ['Scheme_Checklist.pdf'],
                 media: LocalizedMedia(
                   en: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                   hi: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),
                   mr: LocalizedMediaSource(
-                    contentUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                    contentUrl: 'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4',
                     provider: 'MP4',
                     contentType: 'VIDEO',
                   ),

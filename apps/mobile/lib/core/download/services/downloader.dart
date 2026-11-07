@@ -18,6 +18,9 @@ class Downloader {
     _cancelTokens[url] = cancelToken;
 
     final file = File(savePath);
+    if (!file.parent.existsSync()) {
+      file.parent.createSync(recursive: true);
+    }
     if (startBytes > 0 && !await file.exists()) {
       startBytes = 0; // File was deleted, start from scratch
     }
@@ -28,7 +31,10 @@ class Downloader {
         savePath,
         cancelToken: cancelToken,
         options: Options(
-          headers: startBytes > 0 ? {'Range': 'bytes=$startBytes-'} : null,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 CompassMobile/1.0',
+            if (startBytes > 0) 'Range': 'bytes=$startBytes-',
+          },
         ),
         onReceiveProgress: (received, total) {
           int realTotal = total != -1 ? total + startBytes : -1;

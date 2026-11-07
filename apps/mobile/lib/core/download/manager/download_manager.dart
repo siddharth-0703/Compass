@@ -139,28 +139,34 @@ class DownloadManager {
         task = task.copyWith(state: DownloadState.downloading);
         await box.put(task.id, task.toJson());
 
+        int lastProgressUpdate = 0;
         try {
           await _downloader.startDownload(
             url: task.url,
             savePath: task.savePath,
             startBytes: task.downloadedBytes,
             onProgress: (downloaded, total) {
-              // Update state periodically (to avoid spamming Hive, we could debounce this,
-              // but for MVP updating every time is okay for small progress jumps)
-              final updatedTask = task.copyWith(
-                downloadedBytes: downloaded,
-                totalBytes: total > 0 ? total : task.totalBytes,
-              );
-              box.put(task.id, updatedTask.toJson()); // async put is fine here
+              final now = DateTime.now().millisecondsSinceEpoch;
+              if (now - lastProgressUpdate > 300 || downloaded == total) {
+                lastProgressUpdate = now;
+                final updatedTask = task.copyWith(
+                  downloadedBytes: downloaded,
+                  totalBytes: total > 0 ? total : task.totalBytes,
+                );
+                box.put(task.id, updatedTask.toJson());
+              }
             },
           );
 
-          // 3. Verify Checksum
+          // 3. Verify Checksum & Save Final State
           if (await _fileIntegrity.verifyChecksum(
               task.savePath, task.expectedChecksum,)) {
+            final savedFile = File(task.savePath);
+            final realSize = savedFile.existsSync() ? savedFile.lengthSync() : task.totalBytes;
             task = task.copyWith(
                 state: DownloadState.completed,
-                downloadedBytes: task.totalBytes,);
+                downloadedBytes: realSize,
+                totalBytes: realSize,);
             await box.put(task.id, task.toJson());
           } else {
             task = task.copyWith(

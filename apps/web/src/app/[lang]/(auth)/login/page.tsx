@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import Link from "next/link"
-import { ShieldCheck } from "lucide-react"
+import { ShieldCheck, Zap } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -32,6 +32,8 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter()
+  const params = useParams()
+  const lang = (params?.lang as string) || "en"
   const setUser = useAuthStore((state) => state.setUser)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -39,8 +41,8 @@ export default function LoginPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      identifier: "",
-      password: "",
+      identifier: "siddharthjaiswar9107@gmail.com",
+      password: "Sid@1234567",
     },
   })
 
@@ -63,8 +65,8 @@ export default function LoginPage() {
         // Store user metadata in Zustand
         setUser(response.data.data.user)
         
-        // Redirect to dashboard instead of /
-        router.push("/dashboard")
+        // Redirect to dashboard
+        router.push(`/${lang}/dashboard`)
         router.refresh()
       }
     } catch (err: any) {
@@ -73,6 +75,27 @@ export default function LoginPage() {
       } else {
         setError("An unexpected error occurred. Please try again.")
       }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleQuickDemoLogin() {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await axios.post("/api/auth/login", {
+        identifier: "siddharthjaiswar9107@gmail.com",
+        password: "Sid@1234567",
+        isDemo: true,
+      })
+      if (response.data.success) {
+        setUser(response.data.data.user)
+        router.push(`/${lang}/dashboard`)
+        router.refresh()
+      }
+    } catch (err: any) {
+      setError("An unexpected error occurred. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -92,8 +115,13 @@ export default function LoginPage() {
             </p>
           </div>
 
+          <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400">
+            <span className="font-medium">🎓 Demo Mode: Credentials pre-filled for instant 2-min presentation</span>
+            <span className="font-semibold px-2 py-0.5 rounded bg-emerald-500/20 uppercase tracking-wider text-[10px]">Instant</span>
+          </div>
+
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {error && (
                 <div className="p-3 text-sm text-destructive-foreground bg-destructive/20 rounded-md border border-destructive">
                   {error}
@@ -140,6 +168,18 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
+
+              <Button 
+                type="button" 
+                variant="outline"
+                className="w-full h-12 text-base font-semibold border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-500 transition-all flex items-center justify-center gap-2 shadow-sm"
+                onClick={handleQuickDemoLogin}
+                disabled={isLoading}
+              >
+                <Zap className="h-5 w-5 fill-emerald-500 text-emerald-500" />
+                ⚡ Instant Demo Login (1-Click)
+              </Button>
+
               <Button type="submit" className="w-full h-12 text-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>

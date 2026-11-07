@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../providers/eligibility_provider.dart';
-import '../../domain/entities/eligibility_profile.dart';
-import '../../domain/entities/question_definition.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../providers/scheme_recommendation_provider.dart';
 
 class SchemeQuestionnaireScreen extends ConsumerStatefulWidget {
   const SchemeQuestionnaireScreen({super.key});
@@ -15,382 +14,682 @@ class SchemeQuestionnaireScreen extends ConsumerStatefulWidget {
 
 class _SchemeQuestionnaireScreenState
     extends ConsumerState<SchemeQuestionnaireScreen> {
-  int _currentStep = 0;
-  final _formKey = GlobalKey<FormState>();
+  int _currentStep = 1;
+  final int _totalSteps = 6;
 
-  // Static Schema Definition supporting serializable conditional visibility logic
-  static const List<QuestionDefinition> _questions = [
-    // Step 1: Base Profile
-    QuestionDefinition(
-      id: 'activity',
-      field: 'activityType',
-      label: 'What best describes your primary activity?',
-      type: 'SINGLE_SELECT',
-      options: ['FARMER', 'ENTREPRENEUR', 'ARTISAN', 'STUDENT', 'OTHER'],
-      required: true,
-    ),
-    QuestionDefinition(
-      id: 'age',
-      field: 'age',
-      label: 'What is your age?',
-      type: 'NUMBER',
-      required: true,
-    ),
-    // Step 2: Location
-    QuestionDefinition(
-      id: 'state',
-      field: 'state',
-      label: 'Which state do you operate in?',
-      type: 'SINGLE_SELECT',
-      options: ['Maharashtra', 'Karnataka', 'Gujarat', 'Other'],
-      required: true,
-    ),
-    QuestionDefinition(
-      id: 'district',
-      field: 'district',
-      label: 'Enter your district name',
-      type: 'TEXT',
-      required: true,
-    ),
-    // Step 3: Farmer Specific Questions (Condition: activityType == FARMER)
-    QuestionDefinition(
-      id: 'owns_land',
-      field: 'ownsLand',
-      label: 'Do you own agricultural land?',
-      type: 'BOOLEAN',
-      visibilityCondition: QuestionVisibilityCondition(
-        field: 'activityType',
-        operator: 'EQ',
-        value: 'FARMER',
-      ),
-    ),
-    QuestionDefinition(
-      id: 'land_size',
-      field: 'landSize',
-      label: 'What is your land size (in acres)?',
-      type: 'NUMBER',
-      visibilityCondition: QuestionVisibilityCondition(
-        field: 'activityType',
-        operator: 'EQ',
-        value: 'FARMER',
-      ),
-    ),
-    // Step 4: Entrepreneur Specific Questions (Condition: activityType == ENTREPRENEUR)
-    QuestionDefinition(
-      id: 'biz_type',
-      field: 'businessType',
-      label: 'What is your business type?',
-      type: 'SINGLE_SELECT',
-      options: ['Manufacturing', 'Services', 'Retail', 'Agri-business'],
-      visibilityCondition: QuestionVisibilityCondition(
-        field: 'activityType',
-        operator: 'EQ',
-        value: 'ENTREPRENEUR',
-      ),
-    ),
-    QuestionDefinition(
-      id: 'biz_stage',
-      field: 'businessStage',
-      label: 'What stage is your business in?',
-      type: 'SINGLE_SELECT',
-      options: ['Idea Stage', 'Early Stage', 'Growth Stage', 'Mature'],
-      visibilityCondition: QuestionVisibilityCondition(
-        field: 'activityType',
-        operator: 'EQ',
-        value: 'ENTREPRENEUR',
-      ),
-    ),
-    // Step 5: Artisan Specific Questions (Condition: activityType == ARTISAN)
-    QuestionDefinition(
-      id: 'craft_type',
-      field: 'craftType',
-      label: 'What craft type do you specialize in?',
-      type: 'TEXT',
-      visibilityCondition: QuestionVisibilityCondition(
-        field: 'activityType',
-        operator: 'EQ',
-        value: 'ARTISAN',
-      ),
-    ),
-    // Step 6: Financials
-    QuestionDefinition(
-      id: 'income',
-      field: 'annualIncome',
-      label: 'Enter your approximate annual income:',
-      type: 'RANGE',
-      options: ['Below 1 Lakh', '1-5 Lakhs', '5-10 Lakhs', 'Above 10 Lakhs'],
-    ),
-    QuestionDefinition(
-      id: 'turnover',
-      field: 'annualTurnover',
-      label: 'Enter your business annual turnover (if applicable):',
-      type: 'RANGE',
-      options: ['Below 5 Lakhs', '5-10 Lakhs', '10-25 Lakhs', 'Above 25 Lakhs'],
-      visibilityCondition: QuestionVisibilityCondition(
-        field: 'activityType',
-        operator: 'EQ',
-        value: 'ENTREPRENEUR',
-      ),
-    ),
+  String? _activity = 'FARMER';
+  String _state = 'Maharashtra';
+  int _income = 200000;
+  String? _age = '26-40';
+  String? _gender = 'MALE';
+  String? _category = 'SC';
+
+  final List<String> _states = const [
+    'Maharashtra',
+    'Andhra Pradesh',
+    'Arunachal Pradesh',
+    'Assam',
+    'Bihar',
+    'Chhattisgarh',
+    'Goa',
+    'Gujarat',
+    'Haryana',
+    'Himachal Pradesh',
+    'Jharkhand',
+    'Karnataka',
+    'Kerala',
+    'Madhya Pradesh',
+    'Manipur',
+    'Meghalaya',
+    'Mizoram',
+    'Nagaland',
+    'Odisha',
+    'Punjab',
+    'Rajasthan',
+    'Sikkim',
+    'Tamil Nadu',
+    'Telangana',
+    'Tripura',
+    'Uttar Pradesh',
+    'Uttarakhand',
+    'West Bengal',
+    'Delhi',
   ];
 
   @override
-  Widget build(BuildContext context) {
-    final draft = ref.watch(eligibilityDraftProvider);
-    final completeness = ref.watch(profileCompletenessProvider);
+  void initState() {
+    super.initState();
+    final profile = ref.read(activeQuestionnaireProfileProvider);
+    if (profile != null) {
+      _activity = profile['activity']?.toString() ?? _activity;
+      _state = profile['state']?.toString() ?? _state;
+      if (profile['income'] is num) _income = (profile['income'] as num).toInt();
+      _age = profile['age']?.toString() ?? _age;
+      _gender = profile['gender']?.toString() ?? _gender;
+      _category = profile['category']?.toString() ?? _category;
+    }
+  }
 
-    // Group questions into logic pages/steps
-    final visibleQuestions =
-        _questions.where((q) => q.isVisible(draft)).toList();
+  String _getStepTitle() {
+    switch (_currentStep) {
+      case 1:
+        return 'Primary Activity';
+      case 2:
+        return 'State';
+      case 3:
+        return 'Annual Income';
+      case 4:
+        return 'Age Group';
+      case 5:
+        return 'Gender';
+      case 6:
+        return 'Social Category';
+      default:
+        return '';
+    }
+  }
 
-    // Safety check: clear hidden properties immediately
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      for (final question in _questions) {
-        if (!question.isVisible(draft) && draft[question.field] != null) {
-          ref
-              .read(eligibilityDraftProvider.notifier)
-              .updateAnswer(question.field, null);
-        }
+  bool _canProceed() {
+    switch (_currentStep) {
+      case 1:
+        return _activity != null;
+      case 2:
+        return _state.isNotEmpty;
+      case 3:
+        return _income >= 0;
+      case 4:
+        return _age != null;
+      case 5:
+        return _gender != null;
+      case 6:
+        return _category != null;
+      default:
+        return true;
+    }
+  }
+
+  void _onNext() async {
+    if (_currentStep < _totalSteps) {
+      setState(() => _currentStep++);
+    } else {
+      // Submit questionnaire
+      final data = {
+        'activity': _activity,
+        'state': _state,
+        'income': _income,
+        'age': _age,
+        'gender': _gender,
+        'category': _category,
+      };
+
+      await ref
+          .read(schemeRecommendationProvider.notifier)
+          .updateFromQuestionnaire(data);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Profile updated for $_category • $_activity in $_state!'),
+            backgroundColor: Colors.green.shade800,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        context.pop();
       }
-    });
+    }
+  }
 
-    final steps = _buildStepGroups(visibleQuestions, draft);
-
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Eligibility Questionnaire'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.black87),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text(
+          'Find Your Schemes',
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4.0),
-          child: LinearProgressIndicator(
-            value: completeness,
-            backgroundColor: Colors.grey.shade200,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+          preferredSize: const Size.fromHeight(38),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Text(
+                  'Step $_currentStep of $_totalSteps — ${_getStepTitle()}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                value: _currentStep / _totalSteps,
+                backgroundColor: Colors.grey.shade200,
+                color: Colors.green.shade600,
+                minHeight: 4,
+              ),
+            ],
           ),
         ),
       ),
-      body: Form(
-        key: _formKey,
+      body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Profile completeness: ${(completeness * 100).toInt()}%',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ),
             Expanded(
-              child: _currentStep < steps.length
-                  ? ListView(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24.0, vertical: 12.0,),
-                      children: steps[_currentStep],
-                    )
-                  : _buildSuccessView(),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20.0),
+                child: _buildCurrentStepContent(),
+              ),
             ),
-            _buildNavigationRow(steps.length),
+            _buildBottomNav(),
           ],
         ),
       ),
     );
   }
 
-  List<List<Widget>> _buildStepGroups(
-      List<QuestionDefinition> visibleQuestions, Map<String, dynamic> draft,) {
-    final List<List<Widget>> stepWidgets = [];
-
-    // Group 1: General Core Info
-    final step1 = visibleQuestions
-        .where((q) => q.id == 'activity' || q.id == 'age')
-        .toList();
-    if (step1.isNotEmpty) {
-      stepWidgets.add(step1.map((q) => _buildQuestionField(q, draft)).toList());
+  Widget _buildCurrentStepContent() {
+    switch (_currentStep) {
+      case 1:
+        return _buildStep1Activity();
+      case 2:
+        return _buildStep2State();
+      case 3:
+        return _buildStep3Income();
+      case 4:
+        return _buildStep4Age();
+      case 5:
+        return _buildStep5Gender();
+      case 6:
+        return _buildStep6SocialCategory();
+      default:
+        return const SizedBox();
     }
-
-    // Group 2: Location
-    final step2 = visibleQuestions
-        .where((q) => q.id == 'state' || q.id == 'district')
-        .toList();
-    if (step2.isNotEmpty) {
-      stepWidgets.add(step2.map((q) => _buildQuestionField(q, draft)).toList());
-    }
-
-    // Group 3: Dynamic Category Specifics
-    final step3 = visibleQuestions
-        .where((q) =>
-            q.id == 'owns_land' ||
-            q.id == 'land_size' ||
-            q.id == 'biz_type' ||
-            q.id == 'biz_stage' ||
-            q.id == 'craft_type',)
-        .toList();
-    if (step3.isNotEmpty) {
-      stepWidgets.add(step3.map((q) => _buildQuestionField(q, draft)).toList());
-    }
-
-    // Group 4: Financials
-    final step4 = visibleQuestions
-        .where((q) => q.id == 'income' || q.id == 'turnover')
-        .toList();
-    if (step4.isNotEmpty) {
-      stepWidgets.add(step4.map((q) => _buildQuestionField(q, draft)).toList());
-    }
-
-    return stepWidgets;
   }
 
-  Widget _buildQuestionField(
-      QuestionDefinition question, Map<String, dynamic> draft,) {
-    final value = draft[question.field];
+  // STEP 1: Primary Activity
+  Widget _buildStep1Activity() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'What best describes what you do?',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        const SizedBox(height: 16),
+        _buildOptionCard(
+          value: 'FARMER',
+          selectedValue: _activity,
+          icon: '🌾',
+          title: 'Farmer / Agriculture',
+          subtitle: 'Crop farming, horticulture, animal husbandry, dairy',
+          onTap: () => setState(() => _activity = 'FARMER'),
+        ),
+        _buildOptionCard(
+          value: 'ENTREPRENEUR',
+          selectedValue: _activity,
+          icon: '🏪',
+          title: 'Entrepreneur / Business Owner',
+          subtitle: 'Running or starting a micro-business or processing unit',
+          onTap: () => setState(() => _activity = 'ENTREPRENEUR'),
+        ),
+        _buildOptionCard(
+          value: 'ARTISAN',
+          selectedValue: _activity,
+          icon: '🧵',
+          title: 'Artisan / Craftsperson',
+          subtitle: 'Handicrafts, handloom, pottery, carpentry',
+          onTap: () => setState(() => _activity = 'ARTISAN'),
+        ),
+        _buildOptionCard(
+          value: 'STUDENT',
+          selectedValue: _activity,
+          icon: '📚',
+          title: 'Student / Job Seeker',
+          subtitle: 'Seeking skill training, subsidies or employment credit',
+          onTap: () => setState(() => _activity = 'STUDENT'),
+        ),
+        _buildOptionCard(
+          value: 'WOMEN_SHG',
+          selectedValue: _activity,
+          icon: '👩',
+          title: 'Women SHG Member',
+          subtitle: 'Part of a Self Help Group / Joint Liability Group',
+          onTap: () => setState(() => _activity = 'WOMEN_SHG'),
+        ),
+      ],
+    );
+  }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            question.label,
-            style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,),
+  // STEP 2: State
+  Widget _buildStep2State() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Which state are you located in? This helps find state-specific schemes.',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade300, width: 2),
           ),
-          const SizedBox(height: 12),
-          if (question.type == 'SINGLE_SELECT' || question.type == 'RANGE')
-            DropdownButtonFormField<String>(
-              initialValue: value?.toString(),
-              decoration: InputDecoration(
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-              items: question.options!
-                  .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
-                  .toList(),
-              onChanged: (val) {
-                ref
-                    .read(eligibilityDraftProvider.notifier)
-                    .updateAnswer(question.field, val);
-              },
-              validator: question.required
-                  ? (v) => v == null ? 'Required field' : null
-                  : null,
-            )
-          else if (question.type == 'BOOLEAN')
-            Row(
-              children: [
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('Yes', style: TextStyle(fontSize: 16)),
-                    selected: value == true,
-                    onSelected: (selected) {
-                      ref
-                          .read(eligibilityDraftProvider.notifier)
-                          .updateAnswer(question.field, true);
-                    },
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              isExpanded: true,
+              value: _states.contains(_state) ? _state : _states.first,
+              items: _states.map((s) {
+                return DropdownMenuItem(
+                  value: s,
+                  child: Text(
+                    s,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('No', style: TextStyle(fontSize: 16)),
-                    selected: value == false,
-                    onSelected: (selected) {
-                      ref
-                          .read(eligibilityDraftProvider.notifier)
-                          .updateAnswer(question.field, false);
-                    },
-                  ),
-                ),
-              ],
-            )
-          else if (question.type == 'NUMBER')
-            TextFormField(
-              initialValue: value?.toString(),
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
+                );
+              }).toList(),
               onChanged: (val) {
-                final numVal = num.tryParse(val);
-                ref
-                    .read(eligibilityDraftProvider.notifier)
-                    .updateAnswer(question.field, numVal);
+                if (val != null) setState(() => _state = val);
               },
-              validator: question.required
-                  ? (v) => (v == null || v.isEmpty) ? 'Required field' : null
-                  : null,
-            )
-          else
-            TextFormField(
-              initialValue: value?.toString(),
-              decoration: InputDecoration(
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-              onChanged: (val) {
-                ref
-                    .read(eligibilityDraftProvider.notifier)
-                    .updateAnswer(question.field, val);
-              },
-              validator: question.required
-                  ? (v) => (v == null || v.isEmpty) ? 'Required field' : null
-                  : null,
             ),
-        ],
-      ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.green.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.green.shade200),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.location_on, color: Colors.green.shade800, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Matching both Government of India & $_state state schemes.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.green.shade900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildSuccessView() {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+  // STEP 3: Annual Income
+  Widget _buildStep3Income() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Approximate annual income or business turnover (in ₹). Many schemes have income limits.',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade300, width: 2),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: TextField(
+            keyboardType: TextInputType.number,
+            controller: TextEditingController(text: _income.toString())
+              ..selection = TextSelection.collapsed(offset: _income.toString().length),
+            decoration: const InputDecoration(
+              icon: Text('₹', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black54)),
+              border: InputBorder.none,
+              hintText: 'e.g. 250000',
+            ),
+            onChanged: (val) {
+              final parsed = int.tryParse(val) ?? 0;
+              setState(() => _income = parsed);
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 2.8,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
           children: [
-            Icon(Icons.check_circle_outline, color: Colors.green, size: 72),
-            SizedBox(height: 24),
-            Text(
-              'Profile Validated!',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Click submit to send your details to the recommendation engine.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black54, fontSize: 16),
-            ),
+            _buildIncomeChip('Below ₹1L', 80000),
+            _buildIncomeChip('₹1L – ₹3L', 200000),
+            _buildIncomeChip('₹3L – ₹5L', 400000),
+            _buildIncomeChip('Above ₹5L', 600000),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIncomeChip(String label, int val) {
+    final isSelected = _income == val;
+    return InkWell(
+      onTap: () => setState(() => _income = val),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.green.shade50 : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? Colors.green.shade600 : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.green.shade800 : Colors.black87,
+            fontSize: 13,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildNavigationRow(int totalSteps) {
+  // STEP 4: Age Group
+  Widget _buildStep4Age() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Your age group helps filter youth and senior-specific schemes.',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        const SizedBox(height: 16),
+        _buildOptionCard(
+          value: '18-25',
+          selectedValue: _age,
+          title: '18 – 25 years',
+          subtitle: 'Youth entrepreneur / recent graduate',
+          onTap: () => setState(() => _age = '18-25'),
+        ),
+        _buildOptionCard(
+          value: '26-40',
+          selectedValue: _age,
+          title: '26 – 40 years',
+          subtitle: 'Prime working age / micro-enterprise expansion',
+          onTap: () => setState(() => _age = '26-40'),
+        ),
+        _buildOptionCard(
+          value: '41-60',
+          selectedValue: _age,
+          title: '41 – 60 years',
+          subtitle: 'Experienced rural business operator',
+          onTap: () => setState(() => _age = '41-60'),
+        ),
+        _buildOptionCard(
+          value: '60+',
+          selectedValue: _age,
+          title: '60+ years',
+          subtitle: 'Senior citizen pension and welfare schemes apply',
+          onTap: () => setState(() => _age = '60+'),
+        ),
+      ],
+    );
+  }
+
+  // STEP 5: Gender
+  Widget _buildStep5Gender() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Several schemes have special benefits for women entrepreneurs.',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        const SizedBox(height: 16),
+        _buildOptionCard(
+          value: 'FEMALE',
+          selectedValue: _gender,
+          icon: '👩',
+          title: 'Female',
+          subtitle: 'Women-specific schemes and interest rebates apply',
+          onTap: () => setState(() => _gender = 'FEMALE'),
+        ),
+        _buildOptionCard(
+          value: 'MALE',
+          selectedValue: _gender,
+          icon: '👨',
+          title: 'Male',
+          subtitle: 'General and targeted entrepreneurship schemes',
+          onTap: () => setState(() => _gender = 'MALE'),
+        ),
+        _buildOptionCard(
+          value: 'OTHER',
+          selectedValue: _gender,
+          icon: '⚧',
+          title: 'Other / Prefer not to say',
+          subtitle: 'Inclusive central and state government benefits',
+          onTap: () => setState(() => _gender = 'OTHER'),
+        ),
+      ],
+    );
+  }
+
+  // STEP 6: Social Category (Exact Web Parity matching screenshot)
+  Widget _buildStep6SocialCategory() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Many central and state schemes have reserved benefits for specific social categories.',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        const SizedBox(height: 16),
+        _buildCategoryCard(
+          value: 'General',
+          selectedValue: _category,
+          colorDot: Colors.amber,
+          title: 'General',
+          onTap: () => setState(() => _category = 'General'),
+        ),
+        _buildCategoryCard(
+          value: 'OBC',
+          selectedValue: _category,
+          colorDot: Colors.deepOrangeAccent,
+          title: 'OBC (Other Backward Class)',
+          onTap: () => setState(() => _category = 'OBC'),
+        ),
+        _buildCategoryCard(
+          value: 'SC',
+          selectedValue: _category,
+          colorDot: Colors.blueAccent,
+          title: 'SC (Scheduled Caste)',
+          onTap: () => setState(() => _category = 'SC'),
+        ),
+        _buildCategoryCard(
+          value: 'ST',
+          selectedValue: _category,
+          colorDot: Colors.green,
+          title: 'ST (Scheduled Tribe)',
+          onTap: () => setState(() => _category = 'ST'),
+        ),
+        _buildCategoryCard(
+          value: 'Minority',
+          selectedValue: _category,
+          colorDot: Colors.purpleAccent,
+          title: 'Minority',
+          onTap: () => setState(() => _category = 'Minority'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryCard({
+    required String value,
+    required String? selectedValue,
+    required Color colorDot,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = value == selectedValue;
+
     return Container(
-      padding: const EdgeInsets.all(20.0),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: isSelected ? Colors.green.shade50.withValues(alpha: 0.5) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? Colors.green.shade600 : Colors.grey.shade300,
+                width: isSelected ? 2 : 1.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: colorDot,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      color: isSelected ? Colors.green.shade900 : Colors.black87,
+                    ),
+                  ),
+                ),
+                if (isSelected)
+                  const Icon(LucideIcons.checkCircle, color: Colors.green, size: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionCard({
+    required String value,
+    required String? selectedValue,
+    String? icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = value == selectedValue;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: isSelected ? Colors.green.shade50.withValues(alpha: 0.5) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? Colors.green.shade600 : Colors.grey.shade300,
+                width: isSelected ? 2 : 1.5,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (icon != null) ...[
+                  Text(icon, style: const TextStyle(fontSize: 22)),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                          color: isSelected ? Colors.green.shade900 : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  const Icon(LucideIcons.checkCircle, color: Colors.green, size: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade100)),
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if (_currentStep > 0)
+          if (_currentStep > 1)
             OutlinedButton(
               style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () => setState(() => _currentStep--),
               child: const Text('Back'),
@@ -399,49 +698,17 @@ class _SchemeQuestionnaireScreenState
             const SizedBox.shrink(),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+              backgroundColor: Colors.green.shade700,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 2,
             ),
-            onPressed: () async {
-              if (_currentStep < totalSteps) {
-                if (_formKey.currentState!.validate()) {
-                  setState(() => _currentStep++);
-                }
-              } else {
-                // Submit Form
-                final draft = ref.read(eligibilityDraftProvider);
-                final profile = EligibilityProfile(
-                  activityType: draft['activityType']?.toString(),
-                  age: draft['age'] != null
-                      ? int.tryParse(draft['age'].toString())
-                      : null,
-                  state: draft['state']?.toString(),
-                  district: draft['district']?.toString(),
-                  ownsLand: draft['ownsLand'] as bool?,
-                  landSize: draft['landSize'] != null
-                      ? double.tryParse(draft['landSize'].toString())
-                      : null,
-                  businessType: draft['businessType']?.toString(),
-                  businessStage: draft['businessStage']?.toString(),
-                  craftType: draft['craftType']?.toString(),
-                  annualIncome: draft['annualIncome'] != null
-                      ? 300000.0
-                      : null, // Mocked range mapping
-                  profileVersion: 1,
-                  profileUpdatedAt: DateTime.now(),
-                );
-
-                await ref
-                    .read(eligibilityProfileProvider.notifier)
-                    .submitProfile(profile);
-                ref.read(eligibilityDraftProvider.notifier).clearAnswers();
-                if (!mounted) return;
-                context.pop();
-              }
-            },
-            child:
-                Text(_currentStep < totalSteps ? 'Continue' : 'Submit Profile'),
+            onPressed: _canProceed() ? _onNext : null,
+            child: Text(
+              _currentStep < _totalSteps ? 'Continue' : 'Find My Schemes →',
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),

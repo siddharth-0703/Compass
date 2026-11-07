@@ -14,6 +14,7 @@ class SchemeRecommenderScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final businessesState = ref.watch(myBusinessesProvider);
     final recommendationsState = ref.watch(schemeRecommendationProvider);
+    final savedProfile = ref.watch(activeQuestionnaireProfileProvider);
 
     // Provide default fallback business so UI never blocks on network glitches
     final activeBusiness = businessesState.value?.isNotEmpty == true
@@ -182,7 +183,9 @@ class SchemeRecommenderScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Profile: ${activeBusiness.name}',
+                            savedProfile != null
+                                ? 'Profile: ${savedProfile['activity']} (${savedProfile['category']})'
+                                : 'Profile: ${activeBusiness.name}',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
@@ -192,7 +195,9 @@ class SchemeRecommenderScreen extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            '${activeBusiness.category} • ${activeBusiness.locationState ?? "Maharashtra"}',
+                            savedProfile != null
+                                ? '${savedProfile['state']} • Income: ₹${savedProfile['income']}'
+                                : '${activeBusiness.category} • ${activeBusiness.locationState ?? "Maharashtra"}',
                             style: TextStyle(
                               fontSize: 11,
                               color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
@@ -217,32 +222,46 @@ class SchemeRecommenderScreen extends ConsumerWidget {
             ),
           ),
 
-          // Section Title
+          // Section Title matching Web results state
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Verified Recommendations',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade100,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '${recommendationsState.value?.length ?? 4}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green.shade800,
+                  Row(
+                    children: [
+                      Text(
+                        savedProfile != null
+                            ? '${recommendationsState.value?.length ?? 4} Schemes Found For You'
+                            : 'Verified Recommendations',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${recommendationsState.value?.length ?? 4}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade800,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  if (savedProfile != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Based on your profile: ${savedProfile['activity']} · ${savedProfile['state']} · ${savedProfile['category']}',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ],
                 ],
               ),
             ),

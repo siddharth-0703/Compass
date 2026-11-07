@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import '../providers/learning_provider.dart';
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/lesson_progress.dart';
@@ -32,16 +33,19 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
   Timer? _playbackTimer;
   Timer? _syncTimer;
   bool _syncPending = false;
-  double _playbackSpeed = 1.0;
+  final double _playbackSpeed = 1.0;
 
-  // Real Video Player Controller State
+  // Real Video Player State
+  bool _isYoutube = true;
+  YoutubePlayerController? _youtubeController;
+  StreamSubscription<YoutubeVideoState>? _ytStateSubscription;
+  StreamSubscription<YoutubePlayerValue>? _ytValueSubscription;
+
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
   bool _isVideoBuffering = false;
   bool _isVideoError = false;
   bool _isOfflinePlayback = false;
-  bool _showControls = true;
-  Timer? _hideControlsTimer;
 
   @override
   void initState() {
@@ -51,32 +55,22 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
 
   @override
   void dispose() {
-    _hideControlsTimer?.cancel();
     _playbackTimer?.cancel();
     _syncTimer?.cancel();
+    _ytStateSubscription?.cancel();
+    _ytValueSubscription?.cancel();
+    _youtubeController?.close();
     _videoController?.removeListener(_videoListener);
     _videoController?.dispose();
     _flushProgressSync();
     super.dispose();
   }
 
-  void _resetHideControlsTimer() {
-    _hideControlsTimer?.cancel();
-    if (_isPlaying) {
-      _hideControlsTimer = Timer(const Duration(seconds: 4), () {
-        if (mounted && _isPlaying) {
-          setState(() => _showControls = false);
-        }
-      });
-    }
-  }
-
   String _getMediaUrl() {
     if (_currentLesson == null) return '';
     final media = _currentLesson!.media;
-    const fallbackUrl =
-        'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4';
-    if (media == null) return fallbackUrl;
+    const defaultYt = 'https://www.youtube.com/watch?v=pDPWTRA2nPM';
+    if (media == null) return defaultYt;
 
     String? url;
     if (_activeLanguage == 'hi') {
@@ -87,24 +81,11 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
       url = media.en?.contentUrl;
     }
 
-    final resolved = url ??
+    return url ??
         media.en?.contentUrl ??
         media.hi?.contentUrl ??
         media.mr?.contentUrl ??
-        fallbackUrl;
-
-    // Safety fallback if old deprecated Google Cloud storage URL is passed
-    if (resolved.contains('gtv-videos-bucket') ||
-        resolved.contains('commondatastorage.googleapis.com')) {
-      if (_activeLanguage == 'hi') {
-        return 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4';
-      } else if (_activeLanguage == 'mr') {
-        return 'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4';
-      }
-      return fallbackUrl;
-    }
-
-    return resolved;
+        defaultYt;
   }
 
   void _initVideoForCurrentLesson({bool autoPlay = false}) {
@@ -124,55 +105,123 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
     }
 
     _playbackTimer?.cancel();
+    _ytStateSubscription?.cancel();
+    _ytStateSubscription = null;
+    _ytValueSubscription?.cancel();
+    _ytValueSubscription = null;
+    _youtubeController?.close();
+    _youtubeController = null;
+
     _videoController?.removeListener(_videoListener);
     _videoController?.dispose();
     _videoController = null;
 
+    final ytId = YoutubePlayerController.convertUrlToId(mediaUrl);
+
     setState(() {
+      _isOfflinePlayback = localPath != null;
       _isVideoInitialized = false;
       _isVideoBuffering = true;
       _isVideoError = false;
-      _isOfflinePlayback = localPath != null;
+      _isYoutube = localPath == null && ytId != null && ytId.isNotEmpty;
     });
 
-    final controller = localPath != null
-        ? VideoPlayerController.file(File(localPath))
-        : VideoPlayerController.networkUrl(
-            Uri.parse(mediaUrl),
-            httpHeaders: const {
-              'User-Agent': 'Mozilla/5.0 CompassMobileApp/1.0',
-            },
-          );
+    if (localPath != null) {
+      // Offline local file playback
+      final controller = VideoPlayerController.file(File(localPath));
+      _videoController = controller;
+      controller.initialize().then((_) {
+        if (!mounted || _videoController != controller) return;
+        controller.addListener(_videoListener);
+        controller.setPlaybackSpeed(_playbackSpeed);
+        setState(() {
+          _isVideoInitialized = true;
+          _isVideoBuffering = false;
+          if (_positionSeconds > 0 &&
+              _positionSeconds < controller.value.duration.inSeconds) {
+            controller.seekTo(Duration(seconds: _positionSeconds));
+          }
+          if (autoPlay) {
+            _isPlaying = true;
+            controller.play();
+          }
+        });
+      }).catchError((err) {
+        if (!mounted || _videoController != controller) return;
+        setState(() {
+          _isVideoError = true;
+          _isVideoBuffering = false;
+        });
+      });
+    } else if (_isYoutube && ytId != null) {
+      // 1:1 YouTube embed matching web version
+      final ytController = YoutubePlayerController.fromVideoId(
+        videoId: ytId,
+        params: const YoutubePlayerParams(
+          showControls: true,
+          showFullscreenButton: true,
+          mute: false,
+          enableCaption: true,
+          showVideoAnnotations: false,
+        ),
+      );
 
-    _videoController = controller;
+      _youtubeController = ytController;
+      _ytStateSubscription = ytController.videoStateStream.listen((state) {
+        if (!mounted) return;
+        final posSec = state.position.inSeconds;
+        if (posSec != _positionSeconds) {
+          setState(() {
+            _positionSeconds = posSec;
+            _syncPending = true;
+          });
+          final durSec = _currentLesson?.durationSeconds ?? 0;
+          if (durSec > 0 && (posSec / durSec) >= 0.9) {
+            _markLessonComplete(isAuto: true);
+          }
+        }
+      });
 
-    controller.initialize().then((_) {
-      if (!mounted || _videoController != controller) return;
-      controller.addListener(_videoListener);
-      controller.setPlaybackSpeed(_playbackSpeed);
+      _ytValueSubscription = ytController.listen((event) {
+        if (!mounted) return;
+        final isPlaying = event.playerState == PlayerState.playing;
+        if (isPlaying != _isPlaying) {
+          setState(() {
+            _isPlaying = isPlaying;
+          });
+        }
+      });
 
       setState(() {
         _isVideoInitialized = true;
         _isVideoBuffering = false;
-        if (_positionSeconds > 0 &&
-            _positionSeconds < controller.value.duration.inSeconds) {
-          controller.seekTo(Duration(seconds: _positionSeconds));
-        }
-        if (autoPlay) {
-          _isPlaying = true;
-          controller.play();
-          _resetHideControlsTimer();
-        }
       });
-    }).catchError((err) {
-      debugPrint('Video player initialization error: $err');
-      if (!mounted || _videoController != controller) return;
-      setState(() {
-        _isVideoError = true;
-        _isVideoBuffering = false;
-        _isVideoInitialized = false;
+    } else {
+      // Direct MP4 network fallback
+      final controller = VideoPlayerController.networkUrl(
+        Uri.parse(mediaUrl),
+        httpHeaders: const {'User-Agent': 'Mozilla/5.0 Compass/1.0'},
+      );
+      _videoController = controller;
+      controller.initialize().then((_) {
+        if (!mounted || _videoController != controller) return;
+        controller.addListener(_videoListener);
+        setState(() {
+          _isVideoInitialized = true;
+          _isVideoBuffering = false;
+          if (autoPlay) {
+            _isPlaying = true;
+            controller.play();
+          }
+        });
+      }).catchError((err) {
+        if (!mounted) return;
+        setState(() {
+          _isVideoError = true;
+          _isVideoBuffering = false;
+        });
       });
-    });
+    }
   }
 
   void _videoListener() {
@@ -201,82 +250,6 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
         }
       }
     }
-  }
-
-  void _togglePlayPause() {
-    setState(() => _showControls = true);
-    if (_videoController != null && _isVideoInitialized) {
-      if (_videoController!.value.isPlaying) {
-        _videoController!.pause();
-        setState(() => _isPlaying = false);
-      } else {
-        _videoController!.play();
-        setState(() => _isPlaying = true);
-        _resetHideControlsTimer();
-      }
-    } else {
-      // Secondary simulated fallback if hardware video is initializing
-      setState(() => _isPlaying = !_isPlaying);
-      if (_isPlaying) {
-        _startPlaybackTimer();
-      } else {
-        _playbackTimer?.cancel();
-      }
-    }
-  }
-
-  void _seekTo(int seconds) {
-    final maxSec = _videoController != null && _isVideoInitialized
-        ? _videoController!.value.duration.inSeconds
-        : (_currentLesson?.durationSeconds ?? 100);
-    final clamped = seconds.clamp(0, maxSec);
-
-    setState(() {
-      _positionSeconds = clamped;
-      _showControls = true;
-    });
-
-    if (_videoController != null && _isVideoInitialized) {
-      _videoController!.seekTo(Duration(seconds: clamped));
-    }
-    _resetHideControlsTimer();
-  }
-
-  void _setSpeed(double speed) {
-    setState(() {
-      _playbackSpeed = speed;
-      _showControls = true;
-    });
-    if (_videoController != null && _isVideoInitialized) {
-      _videoController!.setPlaybackSpeed(speed);
-    }
-    _resetHideControlsTimer();
-  }
-
-  void _startPlaybackTimer() {
-    _playbackTimer?.cancel();
-    _playbackTimer = Timer.periodic(
-      Duration(milliseconds: (1000 / _playbackSpeed).round()),
-      (timer) {
-        if (_currentLesson == null) return;
-
-        setState(() {
-          if (_positionSeconds < _currentLesson!.durationSeconds) {
-            _positionSeconds++;
-            _syncPending = true;
-
-            final percent =
-                (_positionSeconds / _currentLesson!.durationSeconds) * 100;
-            if (percent >= 90.0) {
-              _markLessonComplete(isAuto: true);
-            }
-          } else {
-            _isPlaying = false;
-            _playbackTimer?.cancel();
-          }
-        });
-      },
-    );
   }
 
   void _startSyncTimer() {
@@ -377,7 +350,6 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
       _currentLesson = lesson;
       _positionSeconds = prog.positionSeconds;
       _isPlaying = false;
-      _showControls = true;
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -386,17 +358,19 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
   }
 
   Future<void> _openExternalStream(String url) async {
-    final uri = Uri.parse(url);
-    bool launched = false;
+    final ytId = YoutubePlayerController.convertUrlToId(url);
+    final target = (ytId != null && ytId.isNotEmpty)
+        ? 'https://www.youtube.com/watch?v=$ytId'
+        : url;
+    final uri = Uri.parse(target);
 
-    // 1. Try external application (VLC / MX Player / Default Video Player)
+    bool launched = false;
     try {
       launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
       launched = false;
     }
 
-    // 2. Try in-app browser view
     if (!launched) {
       try {
         launched = await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
@@ -405,7 +379,6 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
       }
     }
 
-    // 3. Fallback to platform default
     if (!launched) {
       try {
         launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
@@ -424,9 +397,6 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-      if (!_isPlaying) {
-        _togglePlayPause();
-      }
     }
   }
 
@@ -664,13 +634,6 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
   Widget _buildVideoPlayer() {
     if (_currentLesson == null) return const SizedBox();
 
-    final duration = _videoController != null &&
-            _isVideoInitialized &&
-            _videoController!.value.duration.inSeconds > 0
-        ? _videoController!.value.duration.inSeconds
-        : _currentLesson!.durationSeconds;
-    final currentPos = _positionSeconds.clamp(0, duration);
-
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF101418),
@@ -686,355 +649,148 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: AspectRatio(
-          aspectRatio: _videoController != null &&
-                  _isVideoInitialized &&
-                  _videoController!.value.aspectRatio > 0
-              ? _videoController!.value.aspectRatio
-              : 16 / 9,
-          child: GestureDetector(
-            onTap: () {
-              setState(() => _showControls = !_showControls);
-              if (_showControls && _isPlaying) {
-                _resetHideControlsTimer();
-              }
-            },
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // 1. Hardware Video Player or Backdrop
-                if (_videoController != null && _isVideoInitialized)
-                  VideoPlayer(_videoController!)
-                else
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF142417),
-                          _isPlaying
-                              ? const Color(0xFF1C3A24)
-                              : const Color(0xFF181F26),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+          aspectRatio: 16 / 9,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // 1. YouTube Player (1:1 with Web Version)
+              if (_isYoutube && _youtubeController != null)
+                YoutubePlayer(
+                  controller: _youtubeController!,
+                  aspectRatio: 16 / 9,
+                )
+              // 2. Hardware Video Player for Offline Downloaded Files
+              else if (_videoController != null && _isVideoInitialized)
+                VideoPlayer(_videoController!)
+              // 3. Backdrop Placeholder while initializing
+              else
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF142417), Color(0xFF181F26)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
                   ),
+                ),
 
-                // 2. Buffering / Loading Indicator
-                if (_isVideoBuffering)
-                  Container(
-                    color: Colors.black38,
-                    child: const Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircularProgressIndicator(
-                            color: Colors.greenAccent,
+              // 4. Buffering / Loading Indicator
+              if (_isVideoBuffering)
+                Container(
+                  color: Colors.black38,
+                  child: const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(
+                          color: Colors.greenAccent,
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'Loading YouTube Stream...',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                           ),
-                          SizedBox(height: 12),
-                          Text(
-                            'Buffering Video Stream...',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
+                ),
 
-                // 3. Error Fallback
-                if (_isVideoError)
-                  Container(
-                    color: Colors.black87,
-                    padding: const EdgeInsets.all(16),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            LucideIcons.alertTriangle,
-                            color: Colors.amberAccent,
-                            size: 36,
+              // 5. Error Fallback
+              if (_isVideoError)
+                Container(
+                  color: Colors.black87,
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          LucideIcons.alertTriangle,
+                          color: Colors.amberAccent,
+                          size: 36,
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Streaming issue detected',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
                           ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'Streaming issue detected',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Tap retry or use the external stream button below',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.shade700,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Tap retry or use the external stream button below',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green.shade700,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                            ),
-                            icon: const Icon(LucideIcons.refreshCw, size: 14),
-                            label: const Text('Retry Stream'),
-                            onPressed: () =>
-                                _initVideoForCurrentLesson(autoPlay: true),
-                          ),
-                        ],
-                      ),
+                          icon: const Icon(LucideIcons.refreshCw, size: 14),
+                          label: const Text('Retry Stream'),
+                          onPressed: () =>
+                              _initVideoForCurrentLesson(autoPlay: true),
+                        ),
+                      ],
                     ),
                   ),
+                ),
 
-                // 4. Header Badges Overlay
+              // 6. Header Badges Overlay (Shown only for offline player or non-youtube)
+              if (_isOfflinePlayback)
                 Positioned(
                   top: 12,
                   left: 12,
-                  right: 12,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _isOfflinePlayback
-                              ? const Color(0xFF0F766E).withValues(alpha: 0.9)
-                              : Colors.black.withValues(alpha: 0.65),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _isOfflinePlayback
-                                ? Colors.tealAccent
-                                : Colors.white24,
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _isOfflinePlayback
-                                  ? LucideIcons.hardDrive
-                                  : Icons.fiber_manual_record,
-                              color: _isOfflinePlayback
-                                  ? Colors.tealAccent
-                                  : Colors.greenAccent,
-                              size: 11,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              _isOfflinePlayback
-                                  ? 'OFFLINE (ZERO-DATA)'
-                                  : 'STREAMING 1080p HD',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F766E).withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.tealAccent,
+                        width: 0.8,
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          LucideIcons.hardDrive,
+                          color: Colors.tealAccent,
+                          size: 11,
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.65),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white24,
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Text(
-                          _activeLanguage.toUpperCase(),
-                          style: const TextStyle(
+                        SizedBox(width: 6),
+                        Text(
+                          'OFFLINE (ZERO-DATA)',
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // 5. Centered Play / Pause Toggle Overlay
-                AnimatedOpacity(
-                  opacity: _showControls || !_isPlaying ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 200),
-                  child: GestureDetector(
-                    onTap: _togglePlayPause,
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.55),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white38,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Icon(
-                        _isPlaying ? LucideIcons.pause : LucideIcons.play,
-                        color: Colors.white,
-                        size: 32,
-                      ),
+                      ],
                     ),
                   ),
                 ),
-
-                // 6. Player Controls Bar Overlay (Bottom)
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: AnimatedOpacity(
-                    opacity: _showControls || !_isPlaying ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.transparent, Colors.black87],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 6,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Scrub Slider
-                          SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: 3.5,
-                              thumbShape: const RoundSliderThumbShape(
-                                enabledThumbRadius: 6,
-                              ),
-                              overlayShape: const RoundSliderOverlayShape(
-                                overlayRadius: 12,
-                              ),
-                              activeTrackColor: Colors.greenAccent,
-                              inactiveTrackColor: Colors.white24,
-                              thumbColor: Colors.white,
-                            ),
-                            child: Slider(
-                              value: currentPos.toDouble(),
-                              max: duration > 0 ? duration.toDouble() : 100,
-                              onChanged: (val) => _seekTo(val.toInt()),
-                            ),
-                          ),
-                          // Controls Row
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      _isPlaying
-                                          ? LucideIcons.pause
-                                          : LucideIcons.play,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                    onPressed: _togglePlayPause,
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.replay_10,
-                                      color: Colors.white70,
-                                      size: 20,
-                                    ),
-                                    onPressed: () =>
-                                        _seekTo(_positionSeconds - 10),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.forward_10,
-                                      color: Colors.white70,
-                                      size: 20,
-                                    ),
-                                    onPressed: () =>
-                                        _seekTo(_positionSeconds + 10),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '${currentPos ~/ 60}:${(currentPos % 60).toString().padLeft(2, '0')} / ${duration ~/ 60}:${(duration % 60).toString().padLeft(2, '0')}',
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              // Speed Selector
-                              PopupMenuButton<double>(
-                                initialValue: _playbackSpeed,
-                                tooltip: 'Playback Speed',
-                                onSelected: _setSpeed,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8.0,
-                                    vertical: 4.0,
-                                  ),
-                                  child: Text(
-                                    '${_playbackSpeed}x',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                                itemBuilder: (context) => const [
-                                  PopupMenuItem(
-                                    value: 0.75,
-                                    child: Text('0.75x'),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 1.0,
-                                    child: Text('1.0x (Normal)'),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 1.25,
-                                    child: Text('1.25x'),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 1.5,
-                                    child: Text('1.5x'),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -1125,9 +881,10 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
                     );
                   } else if (!isDownloading) {
                     final lessonId = _currentLesson?.id ?? 'video_01';
+                    // Companion offline video file for zero-data review
                     await ref.read(downloadTasksProvider.notifier).enqueue(
                           lessonId,
-                          mediaUrl,
+                          'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
                           '$lessonId.mp4',
                           1048576,
                         );

@@ -17,7 +17,7 @@ class LearningRepositoryImpl implements LearningRepository {
   Future<List<Course>> getAllResources() async {
     try {
       final models = await _remoteDataSource.getAllResources();
-      if (models.isNotEmpty) {
+      if (models.isNotEmpty && models.any((m) => m.id == 'organic-farming')) {
         return models.map((m) => m.toEntity()).toList();
       }
     } catch (_) {
@@ -43,7 +43,11 @@ class LearningRepositoryImpl implements LearningRepository {
       final data = await _remoteDataSource.getCourseProgress(courseId);
       final list = data['lessonProgressList'] as List;
       final parsed = list
-          .map((json) => LessonProgressModel.fromJson(json).toEntity())
+          .map(
+            (json) => LessonProgressModel.fromJson(
+              Map<String, dynamic>.from(json),
+            ).toEntity(),
+          )
           .toList();
 
       final box = HiveStorage.courseProgressBox;
@@ -109,8 +113,8 @@ class LearningRepositoryImpl implements LearningRepository {
         completed: progress.completed,
         clientUpdatedAt: progress.clientUpdatedAt,
       );
-    } catch (e) {
-      // Ignored for offline-first design
+    } catch (_) {
+      // Offline sync queue
     }
   }
 
@@ -144,73 +148,101 @@ class LearningRepositoryImpl implements LearningRepository {
   List<Course> _getDefaultCourses() {
     return [
       const Course(
-        id: 'course-agri-01',
+        id: 'organic-farming',
         title: 'Modern Organic Farming Techniques',
         description:
             'Complete masterclass on natural soil nutrition, composting, bio-fertilizers, and organic certification for Indian farmers.',
         categories: ['Agriculture'],
-        difficulty: 'Beginner',
+        difficulty: 'Intermediate',
         thumbnailUrl:
             'https://images.unsplash.com/photo-1615811361523-6bd03d7748e7?q=80&w=800&auto=format&fit=crop',
         modules: [
           Module(
-            id: 'mod-1',
-            title: 'Soil Health & Vermicomposting',
-            description: 'Building rich organic soil without chemical inputs.',
+            id: 'mod-organic-1',
+            title: 'Organic Soil & Composting',
+            description: 'Natural soil health and organic matter preparation.',
             order: 1,
             lessons: [
               Lesson(
-                id: 'les-1',
-                title: 'Compost Pit Preparation & Microorganisms',
+                id: 'of-en-1',
+                title: 'Masterclass: Organic Soil & Composting',
                 description:
-                    'Step-by-step method to prepare Jeevamrit and vermicompost.',
-                durationSeconds: 1200,
+                    'A complete guide to natural soil health and organic matter preparation.',
+                durationSeconds: 2700,
                 order: 1,
                 isPublished: true,
                 contentStatus: 'VERIFIED',
-                resources: ['Organic_Fertilizer_Guide.pdf'],
+                resources: ['Organic_Farming_Guide.pdf'],
                 media: LocalizedMedia(
                   en: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
-                    provider: 'MP4',
+                    contentUrl: 'https://www.youtube.com/watch?v=pDPWTRA2nPM',
+                    provider: 'YOUTUBE',
                     contentType: 'VIDEO',
                   ),
                   hi: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
-                    provider: 'MP4',
+                    contentUrl: 'https://www.youtube.com/watch?v=XUwptP0_v00',
+                    provider: 'YOUTUBE',
                     contentType: 'VIDEO',
                   ),
                   mr: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4',
-                    provider: 'MP4',
+                    contentUrl: 'https://www.youtube.com/watch?v=yu2MMDwVDR0',
+                    provider: 'YOUTUBE',
                     contentType: 'VIDEO',
                   ),
                 ),
               ),
               Lesson(
-                id: 'les-1b',
+                id: 'of-hi-2',
                 title: 'Bio-Pesticides and Natural Crop Protection',
                 description:
                     'Preparing Neem Astra, Agni Astra and Dashparni Ark for organic pest control.',
-                durationSeconds: 960,
+                durationSeconds: 1500,
                 order: 2,
                 isPublished: true,
                 contentStatus: 'VERIFIED',
                 resources: ['BioPesticide_Recipes.pdf'],
                 media: LocalizedMedia(
                   en: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
-                    provider: 'MP4',
+                    contentUrl: 'https://www.youtube.com/watch?v=pDPWTRA2nPM',
+                    provider: 'YOUTUBE',
                     contentType: 'VIDEO',
                   ),
                   hi: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
-                    provider: 'MP4',
+                    contentUrl: 'https://www.youtube.com/watch?v=2qiNKen-rm0',
+                    provider: 'YOUTUBE',
                     contentType: 'VIDEO',
                   ),
                   mr: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4',
-                    provider: 'MP4',
+                    contentUrl: 'https://www.youtube.com/watch?v=TwnPqUBSAEQ',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                ),
+              ),
+              Lesson(
+                id: 'of-hi-3',
+                title: 'Organic Certification & Premium Mandi Pricing',
+                description:
+                    'Natural fertilizers, certification, and getting 40% premium mandi rates.',
+                durationSeconds: 2700,
+                order: 3,
+                isPublished: true,
+                contentStatus: 'VERIFIED',
+                resources: ['Certification_Checklist.pdf'],
+                media: LocalizedMedia(
+                  en: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=pDPWTRA2nPM',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                  hi: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=Kouij55MvzE',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                  mr: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=yu2MMDwVDR0',
+                    provider: 'YOUTUBE',
                     contentType: 'VIDEO',
                   ),
                 ),
@@ -220,44 +252,151 @@ class LearningRepositoryImpl implements LearningRepository {
         ],
       ),
       const Course(
-        id: 'course-fin-02',
-        title: 'Financial Literacy for Rural Micro-Enterprises',
+        id: 'digital-marketing',
+        title: 'Digital Marketing for Local Products',
         description:
-            'Master bookkeeping, cash-flow forecasting, UPI business reconciliation, and securing MUDRA/KCC loans.',
-        categories: ['Finance'],
+            'Grow your business using WhatsApp Business, social media, and digital brochures to reach customers beyond your village.',
+        categories: ['Digital Skills'],
         difficulty: 'Beginner',
+        thumbnailUrl:
+            'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=800&auto=format&fit=crop',
+        modules: [
+          Module(
+            id: 'mod-digital-1',
+            title: 'Direct-to-Consumer Channels',
+            description:
+                'Learn how to use WhatsApp Business and Facebook to attract local customers.',
+            order: 1,
+            lessons: [
+              Lesson(
+                id: 'dm-en-1',
+                title: 'Complete Digital Marketing Guide',
+                description:
+                    'Learn how to use WhatsApp Business and Facebook to attract local customers.',
+                durationSeconds: 4200,
+                order: 1,
+                isPublished: true,
+                contentStatus: 'VERIFIED',
+                resources: ['Marketing_Checklist.pdf'],
+                media: LocalizedMedia(
+                  en: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=kGARu1dgLl4',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                  hi: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=5Nm5raGEo0E',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                  mr: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=_ZRkfA6GmGU',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                ),
+              ),
+              Lesson(
+                id: 'dm-catalog-2',
+                title: 'WhatsApp Business Catalogs & Digital Brochures',
+                description:
+                    'Creating professional digital brochures and sharing product catalogs directly with buyers.',
+                durationSeconds: 2400,
+                order: 2,
+                isPublished: true,
+                contentStatus: 'VERIFIED',
+                resources: ['Catalog_Templates.pdf'],
+                media: LocalizedMedia(
+                  en: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=kGARu1dgLl4',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                  hi: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=5Nm5raGEo0E',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                  mr: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=_ZRkfA6GmGU',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      const Course(
+        id: 'financial-literacy-gst',
+        title: 'Understanding GST & Business Taxation',
+        description:
+            'A jargon-free guide to Indian business taxes, GST registration, accounting, and avoiding financial penalties.',
+        categories: ['Financial Literacy'],
+        difficulty: 'Intermediate',
         thumbnailUrl:
             'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=800&auto=format&fit=crop',
         modules: [
           Module(
-            id: 'mod-2',
-            title: 'Bookkeeping & Working Capital',
-            description: 'Simple financial management using mobile registers.',
+            id: 'mod-gst-1',
+            title: 'Taxes & Accounting for MSMEs',
+            description:
+                'Everything a small business owner needs to know about GST and basic accounting.',
             order: 1,
             lessons: [
               Lesson(
-                id: 'les-2',
-                title: 'Daily Cash Inflow vs. Operating Expenses',
-                description: 'How to calculate gross profit margin accurately.',
-                durationSeconds: 900,
+                id: 'gst-en-1',
+                title: 'GST Masterclass for MSMEs',
+                description:
+                    'Everything a small business owner needs to know about GST and basic accounting.',
+                durationSeconds: 3300,
                 order: 1,
                 isPublished: true,
                 contentStatus: 'VERIFIED',
-                resources: ['Cashflow_Template.xlsx'],
+                resources: ['Tax_Calendar.pdf'],
                 media: LocalizedMedia(
                   en: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4',
-                    provider: 'MP4',
+                    contentUrl: 'https://www.youtube.com/watch?v=mT3P0YSNonE',
+                    provider: 'YOUTUBE',
                     contentType: 'VIDEO',
                   ),
                   hi: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
-                    provider: 'MP4',
+                    contentUrl: 'https://www.youtube.com/watch?v=qIcA38MYsdk',
+                    provider: 'YOUTUBE',
                     contentType: 'VIDEO',
                   ),
                   mr: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
-                    provider: 'MP4',
+                    contentUrl: 'https://www.youtube.com/watch?v=pDPWTRA2nPM',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                ),
+              ),
+              Lesson(
+                id: 'gst-ledger-2',
+                title: 'Bookkeeping & Working Capital Management',
+                description:
+                    'Maintaining digital credit ledgers and cashflow tracking for rural enterprises.',
+                durationSeconds: 2100,
+                order: 2,
+                isPublished: true,
+                contentStatus: 'VERIFIED',
+                resources: ['Ledger_Guide.pdf'],
+                media: LocalizedMedia(
+                  en: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=mT3P0YSNonE',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                  hi: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=qIcA38MYsdk',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                  mr: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=pDPWTRA2nPM',
+                    provider: 'YOUTUBE',
                     contentType: 'VIDEO',
                   ),
                 ),
@@ -267,91 +406,74 @@ class LearningRepositoryImpl implements LearningRepository {
         ],
       ),
       const Course(
-        id: 'course-mkt-03',
-        title: 'Digital Marketing for Rural Artisans & Farmers',
+        id: 'gov-schemes-guide',
+        title: 'Navigating Government Schemes & Subsidies',
         description:
-            'Learn how to sell processed agricultural goods and handloom products directly on ONDC, WhatsApp Catalogs, and Instagram.',
-        categories: ['Marketing', 'Digital Skills'],
-        difficulty: 'Intermediate',
-        thumbnailUrl:
-            'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?q=80&w=800&auto=format&fit=crop',
-        modules: [
-          Module(
-            id: 'mod-3',
-            title: 'Direct-to-Consumer Channels',
-            description: 'Packaging, pricing, and dispatching online orders.',
-            order: 1,
-            lessons: [
-              Lesson(
-                id: 'les-3',
-                title: 'Setting up WhatsApp Business & Catalog Sharing',
-                description: 'Creating professional digital brochures.',
-                durationSeconds: 1500,
-                order: 1,
-                isPublished: true,
-                contentStatus: 'VERIFIED',
-                resources: ['Catalog_Checklist.pdf'],
-                media: LocalizedMedia(
-                  en: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
-                    provider: 'MP4',
-                    contentType: 'VIDEO',
-                  ),
-                  hi: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
-                    provider: 'MP4',
-                    contentType: 'VIDEO',
-                  ),
-                  mr: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4',
-                    provider: 'MP4',
-                    contentType: 'VIDEO',
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      const Course(
-        id: 'course-gov-04',
-        title: 'Government Schemes & Subsidies Practical Guide',
-        description:
-            'Detailed eligibility breakdown and paperwork walkthrough for PM-KMY, PMMY Mudra, NABARD Dairy Venture, and Stand-Up India.',
+            'Learn how to access government support, Mudra loans, PMFME, and state-level subsidy applications without middlemen.',
         categories: ['Government Schemes'],
         difficulty: 'Beginner',
         thumbnailUrl:
-            'https://images.unsplash.com/photo-1541872703-74c5e44368f9?q=80&w=800&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?q=80&w=800&auto=format&fit=crop',
         modules: [
           Module(
-            id: 'mod-4',
-            title: 'Applying via CSC & JanSamarth',
-            description: 'Step by step submission without middleman commissions.',
+            id: 'mod-schemes-1',
+            title: 'Subsidies & Official Portals',
+            description:
+                'Overview of Mudra loans, PMFME, and state-level subsidy applications.',
             order: 1,
             lessons: [
               Lesson(
-                id: 'les-4',
-                title: 'Document Verification & Eligibility Checklist',
-                description: 'Aadhaar linkage, land records, and 7/12 extract.',
-                durationSeconds: 1080,
+                id: 'gov-en-1',
+                title: 'Complete Guide to Business Subsidies',
+                description:
+                    'An overview of Mudra loans, PMFME, and state-level subsidy applications.',
+                durationSeconds: 2400,
                 order: 1,
                 isPublished: true,
                 contentStatus: 'VERIFIED',
-                resources: ['Scheme_Checklist.pdf'],
+                resources: ['Subsidies_Handbook.pdf'],
                 media: LocalizedMedia(
                   en: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
-                    provider: 'MP4',
+                    contentUrl: 'https://www.youtube.com/watch?v=_ZRkfA6GmGU',
+                    provider: 'YOUTUBE',
                     contentType: 'VIDEO',
                   ),
                   hi: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
-                    provider: 'MP4',
+                    contentUrl: 'https://www.youtube.com/watch?v=5Nm5raGEo0E',
+                    provider: 'YOUTUBE',
                     contentType: 'VIDEO',
                   ),
                   mr: LocalizedMediaSource(
-                    contentUrl: 'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4',
-                    provider: 'MP4',
+                    contentUrl: 'https://www.youtube.com/watch?v=5blQaNL1qO4',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                ),
+              ),
+              Lesson(
+                id: 'gov-docs-2',
+                title: 'Document Verification & JanSamarth Application',
+                description:
+                    'Aadhaar linkage, 7/12 land records, and online application on JanSamarth portal.',
+                durationSeconds: 1800,
+                order: 2,
+                isPublished: true,
+                contentStatus: 'VERIFIED',
+                resources: ['Scheme_Documents_Checklist.pdf'],
+                media: LocalizedMedia(
+                  en: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=_ZRkfA6GmGU',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                  hi: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=5Nm5raGEo0E',
+                    provider: 'YOUTUBE',
+                    contentType: 'VIDEO',
+                  ),
+                  mr: LocalizedMediaSource(
+                    contentUrl: 'https://www.youtube.com/watch?v=5blQaNL1qO4',
+                    provider: 'YOUTUBE',
                     contentType: 'VIDEO',
                   ),
                 ),

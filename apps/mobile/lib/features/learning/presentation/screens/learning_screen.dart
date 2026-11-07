@@ -18,10 +18,12 @@ class _LearningScreenState extends ConsumerState<LearningScreen> {
   final List<String> _categories = [
     'All',
     'Agriculture',
-    'Finance',
-    'Marketing',
     'Digital Skills',
+    'Financial Literacy',
     'Government Schemes',
+    'Entrepreneurship',
+    'Economy',
+    'Women Entrepreneurs',
   ];
 
   @override

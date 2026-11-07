@@ -50,6 +50,8 @@ dependencies:
   flutter_tts: any
   lucide_icons_flutter: ^3.1.20
   video_player: ^2.14.1
+  youtube_player_flutter: ^10.0.1
+  youtube_player_iframe: ^6.0.2
 
 dev_dependencies:
   flutter_test:

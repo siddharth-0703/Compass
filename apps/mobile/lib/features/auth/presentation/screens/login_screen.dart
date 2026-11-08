@@ -36,7 +36,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authNotifierProvider);
 
     ref.listen(authNotifierProvider, (previous, next) {
-      if (next.error != null && (previous?.error != next.error)) {
+      if (next.user != null && previous?.user != next.user) {
+        context.go('/');
+      } else if (next.error != null && (previous?.error != next.error)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error!),
@@ -134,7 +136,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   _emailController.text =
                                       'siddharthjaiswar9107@gmail.com';
                                   _passwordController.text = 'Sid@1234567';
-                                  _login();
+                                  ref
+                                      .read(authNotifierProvider.notifier)
+                                      .instantDemoLogin();
                                 },
                           child: const Padding(
                             padding: EdgeInsets.symmetric(

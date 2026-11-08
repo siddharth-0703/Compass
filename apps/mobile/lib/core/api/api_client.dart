@@ -16,9 +16,9 @@ class ApiClient {
               'API_URL',
               defaultValue: 'https://compass-1ej0.onrender.com/api/v1',
             ),
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 10),
-            sendTimeout: const Duration(seconds: 10),
+            connectTimeout: const Duration(milliseconds: 3500),
+            receiveTimeout: const Duration(milliseconds: 5000),
+            sendTimeout: const Duration(milliseconds: 3500),
             headers: {'Content-Type': 'application/json'},
           ),
         ) {

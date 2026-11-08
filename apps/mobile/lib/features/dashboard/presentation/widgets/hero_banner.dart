@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
+import '../providers/weather_provider.dart';
+import '../../../../core/localization/locale_provider.dart';
 
 class HeroBanner extends ConsumerWidget {
   const HeroBanner({super.key});
@@ -9,6 +11,8 @@ class HeroBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
+    final weather = ref.watch(weatherNotifierProvider);
+    final strings = ref.watch(appStringsProvider);
     final firstName = authState.user?.firstName ?? 'Siddharth';
 
     return Container(
@@ -157,17 +161,32 @@ class HeroBanner extends ConsumerWidget {
                 // Stats Grid
                 Row(
                   children: [
-                    Expanded(child: _buildStatCard(context, 'Business Score', '92/100', Colors.green)),
+                    Expanded(child: _buildStatCard(context, strings.businessScore, '92/100', Colors.green)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildStatCard(context, 'Market Demand', 'High', Theme.of(context).colorScheme.primary)),
+                    Expanded(child: _buildStatCard(context, strings.marketDemand, strings.highDemand, Theme.of(context).colorScheme.primary)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _buildStatCard(context, 'Weather', '28°C', Colors.orange)),
+                    Expanded(
+                      child: _buildStatCard(
+                        context,
+                        strings.weather,
+                        weather.temperature,
+                        Colors.orange,
+                        subtitle: weather.condition,
+                      ),
+                    ),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildStatCard(context, 'Scheme Matches', '3', Colors.blue)),
+                    Expanded(
+                      child: _buildStatCard(
+                        context,
+                        strings.schemeMatches,
+                        '3',
+                        Colors.blue,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -178,7 +197,13 @@ class HeroBanner extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String title, String value, Color color) {
+  Widget _buildStatCard(
+    BuildContext context,
+    String title,
+    String value,
+    Color color, {
+    String? subtitle,
+  }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -207,6 +232,19 @@ class HeroBanner extends ConsumerWidget {
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           Container(
             height: 4,

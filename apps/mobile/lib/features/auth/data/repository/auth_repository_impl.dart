@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import '../../domain/repository/auth_repository.dart';
 import '../datasource/auth_remote_datasource.dart';
@@ -11,9 +12,36 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._remoteDataSource, this._secureStorage);
 
   @override
+  Future<UserModel> instantDemoLogin() async {
+    final mockUserJson = {
+      'id': '6ab01e77c94cace8a2e2a2c4',
+      'phone': '+919653153511',
+      'email': 'siddharthjaiswar9107@gmail.com',
+      'firstName': 'Siddharth',
+      'lastName': 'Jaiswar',
+      'role': 'admin',
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+    await _secureStorage.saveTokens(
+      accessToken: 'demo_token_siddharth_jaiswar',
+      refreshToken: 'demo_refresh_siddharth_jaiswar',
+    );
+    await _secureStorage.saveUser(jsonEncode(mockUserJson));
+    unawaited(
+      _remoteDataSource
+          .login('siddharthjaiswar9107@gmail.com', 'Sid@1234567')
+          .catchError((_) => <String, dynamic>{}),
+    );
+    return UserModel.fromJson(mockUserJson);
+  }
+
+  @override
   Future<UserModel> login({required String email, required String password}) async {
     try {
-      final data = await _remoteDataSource.login(email, password);
+      final isDemoEmail = email.trim().toLowerCase() == 'siddharthjaiswar9107@gmail.com';
+      final timeoutDuration = isDemoEmail ? const Duration(seconds: 2) : const Duration(seconds: 4);
+
+      final data = await _remoteDataSource.login(email, password).timeout(timeoutDuration);
 
       final payload = data['data'] ?? data;
       final accessToken = payload['accessToken'];

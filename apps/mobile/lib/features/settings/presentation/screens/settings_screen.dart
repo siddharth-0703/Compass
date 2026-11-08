@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/theme/theme_provider.dart';
-import '../../../../core/storage/hive_storage.dart';
+import '../../../../core/localization/locale_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -24,6 +24,8 @@ class SettingsScreen extends ConsumerWidget {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;
     final currentThemeMode = ref.watch(themeModeProvider);
+    final strings = ref.watch(appStringsProvider);
+    final savedLang = ref.watch(appLocaleProvider);
 
     final fullName = (user?.firstName != null && user?.lastName != null)
         ? '${user!.firstName} ${user.lastName}'.trim()
@@ -37,25 +39,24 @@ class SettingsScreen extends ConsumerWidget {
         .take(2)
         .join('');
 
-    final savedLang = HiveStorage.settingsBox.get('app_language') ?? 'en';
     final langTitle = savedLang == 'hi'
         ? 'Hindi (हिंदी)'
         : (savedLang == 'mr' ? 'Marathi (मराठी)' : 'English');
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Settings',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          strings.settings,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: ListView(
         children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Text(
-              'Account',
-              style: TextStyle(
+              strings.account,
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
@@ -87,11 +88,11 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => context.push('/settings/profile'),
           ),
           const Divider(),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Text(
-              'Preferences',
-              style: TextStyle(
+              strings.preferences,
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
@@ -100,7 +101,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.language),
-            title: const Text('Language'),
+            title: Text(strings.language),
             subtitle: Text(langTitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
@@ -114,11 +115,11 @@ class SettingsScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.all(16.0),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
                           child: Text(
-                            'Select Language',
-                            style: TextStyle(
+                            strings.selectLanguage,
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -131,8 +132,7 @@ class SettingsScreen extends ConsumerWidget {
                               ? const Icon(Icons.check, color: Colors.green)
                               : null,
                           onTap: () async {
-                            await HiveStorage.settingsBox
-                                .put('app_language', 'en');
+                            await ref.read(appLocaleProvider.notifier).setLocale('en');
                             if (context.mounted) {
                               context.pop();
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -150,8 +150,7 @@ class SettingsScreen extends ConsumerWidget {
                               ? const Icon(Icons.check, color: Colors.green)
                               : null,
                           onTap: () async {
-                            await HiveStorage.settingsBox
-                                .put('app_language', 'hi');
+                            await ref.read(appLocaleProvider.notifier).setLocale('hi');
                             if (context.mounted) {
                               context.pop();
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -169,8 +168,7 @@ class SettingsScreen extends ConsumerWidget {
                               ? const Icon(Icons.check, color: Colors.green)
                               : null,
                           onTap: () async {
-                            await HiveStorage.settingsBox
-                                .put('app_language', 'mr');
+                            await ref.read(appLocaleProvider.notifier).setLocale('mr');
                             if (context.mounted) {
                               context.pop();
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -191,7 +189,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.dark_mode_outlined),
-            title: const Text('Appearance'),
+            title: Text(strings.appearance),
             subtitle: Text(_getThemeTitle(currentThemeMode)),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
@@ -205,11 +203,11 @@ class SettingsScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.all(16.0),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
                           child: Text(
-                            'Select Appearance',
-                            style: TextStyle(
+                            strings.appearance,
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -218,7 +216,7 @@ class SettingsScreen extends ConsumerWidget {
                         const Divider(height: 1),
                         ListTile(
                           leading: const Icon(Icons.brightness_auto),
-                          title: const Text('System default'),
+                          title: Text(strings.systemDefault),
                           trailing: currentThemeMode == ThemeMode.system
                               ? const Icon(Icons.check, color: Colors.green)
                               : null,
@@ -264,27 +262,33 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.sync),
-            title: const Text('Sync Settings'),
+            title: Text(strings.syncSettings),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/settings/sync'),
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+            title: Text(
+              strings.logout,
+              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
             ),
             onTap: () async {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to logout?'),
+                  title: Text(strings.logout),
+                  content: Text(
+                    strings.isHindi
+                        ? 'क्या आप निश्चित रूप से लॉग आउट करना चाहते हैं?'
+                        : (strings.isMarathi
+                            ? 'तुम्हाला नक्की बाहेर पडायचे आहे का?'
+                            : 'Are you sure you want to logout?'),
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
-                      child: const Text('Cancel'),
+                      child: Text(strings.cancel),
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -292,7 +296,7 @@ class SettingsScreen extends ConsumerWidget {
                         foregroundColor: Colors.white,
                       ),
                       onPressed: () => Navigator.of(context).pop(true),
-                      child: const Text('Logout'),
+                      child: Text(strings.logout),
                     ),
                   ],
                 ),

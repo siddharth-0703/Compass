@@ -66,6 +66,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> instantDemoLogin() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final user = await _authRepository.instantDemoLogin();
+      state = state.copyWith(isLoading: false, user: user);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
   Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {

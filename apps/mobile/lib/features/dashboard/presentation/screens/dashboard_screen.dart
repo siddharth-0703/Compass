@@ -15,6 +15,8 @@ import '../widgets/quick_actions.dart';
 import '../widgets/metric_card.dart';
 
 import '../../../../core/widgets/compass_logo.dart';
+import '../../../../core/localization/locale_provider.dart';
+import '../../../../core/localization/app_strings.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -29,6 +31,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
+    final strings = ref.watch(appStringsProvider);
 
     final List<Widget> screens = [
       _buildHomeTab(context, authState),
@@ -41,7 +44,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       appBar: AppBar(
         title: _currentIndex == 0
             ? const CompassBrandHeader(iconSize: 26, fontSize: 20, animated: true)
-            : Text(_getAppBarTitle(_currentIndex)),
+            : Text(_getAppBarTitle(_currentIndex, strings)),
         actions: [
           Consumer(
             builder: (context, ref, child) {
@@ -82,7 +85,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ],
       ),
-      drawer: _buildDrawer(context, authState),
+      drawer: _buildDrawer(context, authState, strings),
       body: IndexedStack(
         index: _currentIndex,
         children: screens,
@@ -97,22 +100,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.layoutDashboard),
-            label: 'Overview',
+            icon: const Icon(LucideIcons.layoutDashboard),
+            label: strings.overview,
           ),
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.building2),
-            label: 'Businesses',
+            icon: const Icon(LucideIcons.building2),
+            label: strings.businesses,
           ),
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.bookOpen),
-            label: 'Learning',
+            icon: const Icon(LucideIcons.bookOpen),
+            label: strings.learning,
           ),
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.heartHandshake),
-            label: 'Schemes',
+            icon: const Icon(LucideIcons.heartHandshake),
+            label: strings.schemes,
           ),
         ],
       ),
@@ -127,22 +130,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  String _getAppBarTitle(int index) {
+  String _getAppBarTitle(int index, AppStrings strings) {
     switch (index) {
       case 0:
         return 'Compass';
       case 1:
-        return 'Businesses';
+        return strings.businesses;
       case 2:
-        return 'Learning Hub';
+        return strings.learning;
       case 3:
-        return 'Government Schemes';
+        return strings.schemes;
       default:
         return 'Compass';
     }
   }
 
-  Widget _buildDrawer(BuildContext context, AuthState authState) {
+  Widget _buildDrawer(BuildContext context, AuthState authState, AppStrings strings) {
     return Drawer(
       child: SafeArea(
         child: Column(
@@ -164,10 +167,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  _buildDrawerGroup('OVERVIEW'),
+                  _buildDrawerGroup(strings.overview),
                   _buildDrawerItem(
                     icon: LucideIcons.layoutDashboard,
-                    title: 'Dashboard',
+                    title: strings.dashboard,
                     onTap: () {
                       Navigator.pop(context);
                       setState(() => _currentIndex = 0);
@@ -176,7 +179,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   _buildDrawerItem(
                     icon: LucideIcons.barChart2,
-                    title: 'Analytics',
+                    title: strings.analytics,
                     onTap: () {
                       Navigator.pop(context);
                       context.push('/analytics');
@@ -185,10 +188,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   const SizedBox(height: 16),
                   
-                  _buildDrawerGroup('MANAGEMENT'),
+                  _buildDrawerGroup(strings.management),
                   _buildDrawerItem(
                     icon: LucideIcons.users,
-                    title: 'Users',
+                    title: strings.users,
                     onTap: () {
                       Navigator.pop(context);
                       context.push('/users');
@@ -197,7 +200,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   _buildDrawerItem(
                     icon: LucideIcons.building2,
-                    title: 'Businesses',
+                    title: strings.businesses,
                     onTap: () {
                       Navigator.pop(context);
                       setState(() => _currentIndex = 1);
@@ -206,7 +209,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   _buildDrawerItem(
                     icon: LucideIcons.graduationCap,
-                    title: 'Mentorship',
+                    title: strings.mentorship,
                     onTap: () {
                       Navigator.pop(context);
                       context.push('/mentors');
@@ -215,7 +218,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   _buildDrawerItem(
                     icon: LucideIcons.heartHandshake,
-                    title: 'Schemes',
+                    title: strings.schemes,
                     onTap: () {
                       Navigator.pop(context);
                       setState(() => _currentIndex = 3);
@@ -224,7 +227,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   _buildDrawerItem(
                     icon: LucideIcons.lineChart,
-                    title: 'Market Prices',
+                    title: strings.marketPrices,
                     onTap: () {
                       Navigator.pop(context);
                       context.push('/market');
@@ -233,7 +236,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  _buildDrawerGroup('AI & CONTENT'),
+                  _buildDrawerGroup(strings.aiContent),
                   _buildDrawerItem(
                     icon: LucideIcons.shieldCheck,
                     title: 'Moderation',
@@ -245,7 +248,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   _buildDrawerItem(
                     icon: LucideIcons.bookOpen,
-                    title: 'Learning Hub',
+                    title: strings.learning,
                     onTap: () {
                       Navigator.pop(context);
                       setState(() => _currentIndex = 2);
@@ -254,7 +257,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  _buildDrawerGroup('SYSTEM'),
+                  _buildDrawerGroup(strings.system),
                   _buildDrawerItem(
                     icon: LucideIcons.activity,
                     title: 'Observability',
@@ -266,7 +269,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   _buildDrawerItem(
                     icon: LucideIcons.settings,
-                    title: 'Settings',
+                    title: strings.settings,
                     onTap: () {
                       Navigator.pop(context);
                       context.push('/settings');
@@ -311,6 +314,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   IconButton(
                     icon: const Icon(LucideIcons.logOut),
+                    tooltip: strings.logout,
                     onPressed: () {
                       ref.read(authNotifierProvider.notifier).logout();
                     },

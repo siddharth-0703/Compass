@@ -84,7 +84,7 @@ class _ContentModerationScreenState extends State<ContentModerationScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI Content Moderation',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(fontWeight: FontWeight.bold),),
       ),
       body: Column(
         children: [
@@ -125,10 +125,10 @@ class _ContentModerationScreenState extends State<ContentModerationScreen> {
                       children: [
                         Text('1,420 Scanned',
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14)),
+                                fontWeight: FontWeight.bold, fontSize: 14,),),
                         Text('NLP Stream Active',
                             style:
-                                TextStyle(fontSize: 11, color: Colors.blue)),
+                                TextStyle(fontSize: 11, color: Colors.blue),),
                       ],
                     ),
                   ),
@@ -146,10 +146,10 @@ class _ContentModerationScreenState extends State<ContentModerationScreen> {
                       children: [
                         Text('98.7% Clean',
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14)),
+                                fontWeight: FontWeight.bold, fontSize: 14,),),
                         Text('Trust Score',
                             style:
-                                TextStyle(fontSize: 11, color: Colors.green)),
+                                TextStyle(fontSize: 11, color: Colors.green),),
                       ],
                     ),
                   ),
@@ -174,7 +174,7 @@ class _ContentModerationScreenState extends State<ContentModerationScreen> {
                       return Card(
                         margin: const EdgeInsets.only(bottom: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                            borderRadius: BorderRadius.circular(16),),
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
@@ -190,12 +190,12 @@ class _ContentModerationScreenState extends State<ContentModerationScreen> {
                                         item['author'],
                                         style: const TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 15),
+                                            fontSize: 15,),
                                       ),
                                       const SizedBox(width: 6),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
+                                            horizontal: 6, vertical: 2,),
                                         decoration: BoxDecoration(
                                           color: Theme.of(context)
                                               .colorScheme
@@ -212,7 +212,7 @@ class _ContentModerationScreenState extends State<ContentModerationScreen> {
                                   ),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 3),
+                                        horizontal: 8, vertical: 3,),
                                     decoration: BoxDecoration(
                                       color: isApproved
                                           ? Colors.green.withValues(alpha: 0.15)
@@ -251,14 +251,14 @@ class _ContentModerationScreenState extends State<ContentModerationScreen> {
                                 child: Text(
                                   '“${item['content']}”',
                                   style: const TextStyle(
-                                      fontSize: 13, height: 1.4),
+                                      fontSize: 13, height: 1.4,),
                                 ),
                               ),
                               const SizedBox(height: 10),
                               Row(
                                 children: [
                                   Icon(LucideIcons.shieldAlert,
-                                      size: 14, color: Colors.amber.shade800),
+                                      size: 14, color: Colors.amber.shade800,),
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
@@ -275,7 +275,7 @@ class _ContentModerationScreenState extends State<ContentModerationScreen> {
                                     style: const TextStyle(
                                         fontSize: 11,
                                         fontFamily: 'monospace',
-                                        fontWeight: FontWeight.bold),
+                                        fontWeight: FontWeight.bold,),
                                   ),
                                 ],
                               ),
@@ -288,9 +288,9 @@ class _ContentModerationScreenState extends State<ContentModerationScreen> {
                                       onPressed: () =>
                                           _setStatus(item['id'], 'Rejected'),
                                       icon: const Icon(Icons.close,
-                                          size: 16, color: Colors.red),
+                                          size: 16, color: Colors.red,),
                                       label: const Text('Reject',
-                                          style: TextStyle(color: Colors.red)),
+                                          style: TextStyle(color: Colors.red),),
                                       style: OutlinedButton.styleFrom(
                                         side: const BorderSide(color: Colors.red),
                                       ),

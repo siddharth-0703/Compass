@@ -24,12 +24,18 @@ import '../../features/analytics/presentation/screens/analytics_screen.dart';
 import '../../features/observability/presentation/screens/observability_screen.dart';
 import '../../features/moderation/presentation/screens/content_moderation_screen.dart';
 import '../../features/users/presentation/screens/user_management_screen.dart';
+import '../../features/splash/presentation/screens/splash_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/splash',
     routes: [
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: '/login',
         name: 'login',

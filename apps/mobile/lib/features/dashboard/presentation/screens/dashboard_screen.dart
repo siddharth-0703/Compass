@@ -14,6 +14,8 @@ import '../widgets/hero_banner.dart';
 import '../widgets/quick_actions.dart';
 import '../widgets/metric_card.dart';
 
+import '../../../../core/widgets/compass_logo.dart';
+
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -37,7 +39,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_getAppBarTitle(_currentIndex)),
+        title: _currentIndex == 0
+            ? const CompassBrandHeader(iconSize: 26, fontSize: 20, animated: true)
+            : Text(_getAppBarTitle(_currentIndex)),
         actions: [
           Consumer(
             builder: (context, ref, child) {
@@ -147,15 +151,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               padding: EdgeInsets.all(24.0),
               child: Row(
                 children: [
-            Icon(LucideIcons.compass, size: 32, color: Color(0xFF14b8a6)), // Teal 500
-            SizedBox(width: 12),
-            Text(
-                    'Compass',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
+                  CompassBrandHeader(
+                    iconSize: 32,
+                    fontSize: 24,
+                    animated: true,
                   ),
                 ],
               ),

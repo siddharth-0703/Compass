@@ -13,7 +13,7 @@ class BusinessListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Businesses',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(fontWeight: FontWeight.bold),),
         actions: [
           IconButton(
             icon: const Icon(Icons.add_business_outlined),
@@ -39,14 +39,14 @@ class BusinessListScreen extends ConsumerWidget {
                       color: Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withValues(alpha: 0.5)),
+                          .withValues(alpha: 0.5),),
                   const SizedBox(height: 16),
                   Text(
                     'No businesses found',
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface),
+                        color: Theme.of(context).colorScheme.onSurface,),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -55,7 +55,7 @@ class BusinessListScreen extends ConsumerWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .onSurface
-                            .withValues(alpha: 0.6)),
+                            .withValues(alpha: 0.6),),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
@@ -77,7 +77,7 @@ class BusinessListScreen extends ConsumerWidget {
               return Card(
                 margin: const EdgeInsets.only(bottom: 16.0),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                    borderRadius: BorderRadius.circular(16),),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -90,12 +90,12 @@ class BusinessListScreen extends ConsumerWidget {
                             child: Text(
                               business.name,
                               style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                                  fontSize: 18, fontWeight: FontWeight.bold,),
                             ),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
+                                horizontal: 10, vertical: 4,),
                             decoration: BoxDecoration(
                               color: isVerified
                                   ? Colors.green.withValues(alpha: 0.15)
@@ -122,18 +122,18 @@ class BusinessListScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(business.description,
-                          maxLines: 2, overflow: TextOverflow.ellipsis),
+                          maxLines: 2, overflow: TextOverflow.ellipsis,),
                       const SizedBox(height: 16),
                       Row(
                         children: [
                           Icon(Icons.category_outlined,
                               size: 16,
-                              color: Theme.of(context).colorScheme.primary),
+                              color: Theme.of(context).colorScheme.primary,),
                           const SizedBox(width: 4),
                           Text(business.category,
                               style: TextStyle(
                                   color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.w500)),
+                                  fontWeight: FontWeight.w500,),),
                           const Spacer(),
                           if (business.locationDistrict != null) ...[
                             Icon(Icons.location_on_outlined,
@@ -141,14 +141,14 @@ class BusinessListScreen extends ConsumerWidget {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withValues(alpha: 0.6)),
+                                    .withValues(alpha: 0.6),),
                             const SizedBox(width: 4),
                             Text('${business.locationDistrict}, ${business.locationState ?? ""}',
                                 style: TextStyle(
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withValues(alpha: 0.6))),
+                                        .withValues(alpha: 0.6),),),
                           ],
                         ],
                       ),
@@ -172,7 +172,7 @@ class BusinessListScreen extends ConsumerWidget {
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface)),
+                        color: Theme.of(context).colorScheme.onSurface,),),
                 const SizedBox(height: 8),
                 Text(error.toString().replaceAll('Exception: ', ''),
                     textAlign: TextAlign.center,
@@ -180,7 +180,7 @@ class BusinessListScreen extends ConsumerWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .onSurface
-                            .withValues(alpha: 0.6))),
+                            .withValues(alpha: 0.6),),),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () => ref.refresh(myBusinessesProvider),

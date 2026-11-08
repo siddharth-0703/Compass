@@ -43,11 +43,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   ];
 
   final List<Map<String, dynamic>> _sectorBreakdown = [
-    {'name': 'Agri-Processing', 'pct': 38, 'color': Color(0xFF10b981)},
-    {'name': 'Dairy & Livestock', 'pct': 26, 'color': Color(0xFF3b82f6)},
-    {'name': 'Handicrafts & Handlooms', 'pct': 18, 'color': Color(0xFF8b5cf6)},
-    {'name': 'Food & Spices', 'pct': 12, 'color': Color(0xFFf59e0b)},
-    {'name': 'Rural Renewable Tech', 'pct': 6, 'color': Color(0xFF06b6d4)},
+    {'name': 'Agri-Processing', 'pct': 38, 'color': const Color(0xFF10b981)},
+    {'name': 'Dairy & Livestock', 'pct': 26, 'color': const Color(0xFF3b82f6)},
+    {'name': 'Handicrafts & Handlooms', 'pct': 18, 'color': const Color(0xFF8b5cf6)},
+    {'name': 'Food & Spices', 'pct': 12, 'color': const Color(0xFFf59e0b)},
+    {'name': 'Rural Renewable Tech', 'pct': 6, 'color': const Color(0xFF06b6d4)},
   ];
 
   final List<Map<String, dynamic>> _stateStats = [
@@ -63,7 +63,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Platform Analytics',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(fontWeight: FontWeight.bold),),
         actions: [
           PopupMenuButton<String>(
             initialValue: _selectedRange,
@@ -81,7 +81,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               child: Row(
                 children: [
                   Text(_selectedRange,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),),
                   const Icon(Icons.arrow_drop_down),
                 ],
               ),
@@ -127,7 +127,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 final color = kpi['color'] as MaterialColor;
                 return Card(
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),),
                   child: Padding(
                     padding: const EdgeInsets.all(14.0),
                     child: Column(
@@ -160,7 +160,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
+                              horizontal: 6, vertical: 2,),
                           decoration: BoxDecoration(
                             color: color.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
@@ -186,7 +186,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             // Sector Breakdown Card
             Card(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -224,7 +224,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                       sector['name'],
                                       style: const TextStyle(
                                           fontSize: 13,
-                                          fontWeight: FontWeight.w500),
+                                          fontWeight: FontWeight.w500,),
                                     ),
                                   ],
                                 ),
@@ -232,7 +232,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                   '$pct%',
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 13),
+                                      fontSize: 13,),
                                 ),
                               ],
                             ),
@@ -262,7 +262,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             // Top Performing States Table Card
             Card(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -307,14 +307,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                 Text(st['state'],
                                     style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 14)),
+                                        fontSize: 14,),),
                                 Text('${st['units']} active units',
                                     style: TextStyle(
                                         fontSize: 11,
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withValues(alpha: 0.6))),
+                                            .withValues(alpha: 0.6),),),
                               ],
                             ),
                             Column(
@@ -323,12 +323,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                 Text(st['disbursed'],
                                     style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 14)),
+                                        fontSize: 14,),),
                                 Text(st['growth'],
                                     style: const TextStyle(
                                         fontSize: 11,
                                         color: Colors.green,
-                                        fontWeight: FontWeight.bold)),
+                                        fontWeight: FontWeight.bold,),),
                               ],
                             ),
                           ],

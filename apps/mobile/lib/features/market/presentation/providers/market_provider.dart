@@ -43,7 +43,7 @@ class MarketPricesNotifier extends StateNotifier<AsyncValue<List<MarketPriceMode
         market: _currentMarket,
       );
       this.state = AsyncValue.data(prices);
-    } catch (e, stack) {
+    } catch (e) {
       // Fallback: Never crash the UI with an error card
       final prices = await _repository.getPrices(state: _currentState);
       this.state = AsyncValue.data(prices);

@@ -381,7 +381,7 @@ class SchemeRecommendationNotifier
 
     await HiveStorage.schemesCacheBox.put('cached_recommendations', allCombined);
     await HiveStorage.schemesCacheBox.put(
-        'recommendations_generated_at', DateTime.now().toIso8601String());
+        'recommendations_generated_at', DateTime.now().toIso8601String(),);
 
     state = AsyncValue.data(allCombined);
   }

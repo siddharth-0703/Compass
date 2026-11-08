@@ -67,7 +67,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Management',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(fontWeight: FontWeight.bold),),
       ),
       body: Column(
         children: [
@@ -106,16 +106,16 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),),
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
+                        horizontal: 16, vertical: 8,),
                     leading: CircleAvatar(
                       backgroundColor: roleColor.withValues(alpha: 0.15),
                       child: Text(
                         user['name'].substring(0, 1),
                         style: TextStyle(
-                            fontWeight: FontWeight.bold, color: roleColor),
+                            fontWeight: FontWeight.bold, color: roleColor,),
                       ),
                     ),
                     title: Row(
@@ -124,12 +124,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           child: Text(
                             user['name'],
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 15),
+                                fontWeight: FontWeight.bold, fontSize: 15,),
                           ),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
+                              horizontal: 8, vertical: 2,),
                           decoration: BoxDecoration(
                             color: roleColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
@@ -155,14 +155,14 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withValues(alpha: 0.6))),
+                                    .withValues(alpha: 0.6),),),
                         Text('${user['phone']} • ${user['state']}',
                             style: TextStyle(
                                 fontSize: 11,
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withValues(alpha: 0.5))),
+                                    .withValues(alpha: 0.5),),),
                       ],
                     ),
                   ),

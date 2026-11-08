@@ -34,6 +34,8 @@ class Lesson {
   final String
       contentStatus; // NOT_CONFIGURED, CONFIGURED, VERIFIED, UNAVAILABLE
 
+  int get durationMinutes => (durationSeconds / 60).round();
+
   const Lesson({
     required this.id,
     required this.title,

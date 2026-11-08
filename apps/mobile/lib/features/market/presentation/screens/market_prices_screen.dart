@@ -91,28 +91,28 @@ class MarketPricesScreen extends ConsumerWidget {
                               style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).colorScheme.onSurface)),
+                                  color: Theme.of(context).colorScheme.onSurface,),),
                           const SizedBox(height: 8),
                           statesAsync.when(
                             data: (states) => DropdownButtonFormField<String>(
-                              value: states.contains(notifier.currentState)
+                              initialValue: states.contains(notifier.currentState)
                                   ? notifier.currentState
                                   : null,
                               decoration: InputDecoration(
                                 contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
+                                    horizontal: 16, vertical: 12,),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                   borderSide: BorderSide(
                                       color: Theme.of(context)
                                           .colorScheme
-                                          .outlineVariant),
+                                          .outlineVariant,),
                                 ),
                                 hintText: 'Select State',
                               ),
                               items: states
                                   .map((s) => DropdownMenuItem(
-                                      value: s, child: Text(s)))
+                                      value: s, child: Text(s),),)
                                   .toList(),
                               onChanged: (val) {
                                 if (val != null) {
@@ -121,7 +121,7 @@ class MarketPricesScreen extends ConsumerWidget {
                               },
                             ),
                             loading: () => const Center(
-                                child: CircularProgressIndicator()),
+                                child: CircularProgressIndicator(),),
                             error: (_, __) => const Text('Failed to load states'),
                           ),
                           const SizedBox(height: 16),
@@ -130,37 +130,37 @@ class MarketPricesScreen extends ConsumerWidget {
                               style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).colorScheme.onSurface)),
+                                  color: Theme.of(context).colorScheme.onSurface,),),
                           const SizedBox(height: 8),
                           commoditiesAsync.when(
                             data: (commodities) => DropdownButtonFormField<String>(
-                              value: commodities.contains(notifier.currentCommodity)
+                              initialValue: commodities.contains(notifier.currentCommodity)
                                   ? notifier.currentCommodity
                                   : null,
                               decoration: InputDecoration(
                                 contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
+                                    horizontal: 16, vertical: 12,),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                   borderSide: BorderSide(
                                       color: Theme.of(context)
                                           .colorScheme
-                                          .outlineVariant),
+                                          .outlineVariant,),
                                 ),
                                 hintText: 'Select Crop',
                               ),
                               items: [
                                 const DropdownMenuItem<String>(
-                                    value: null, child: Text('All Commodities')),
+                                    value: null, child: Text('All Commodities'),),
                                 ...commodities.map((c) =>
-                                    DropdownMenuItem(value: c, child: Text(c))),
+                                    DropdownMenuItem(value: c, child: Text(c)),),
                               ],
                               onChanged: (val) {
                                 notifier.fetchPrices(commodity: val);
                               },
                             ),
                             loading: () => const Center(
-                                child: CircularProgressIndicator()),
+                                child: CircularProgressIndicator(),),
                             error: (_, __) =>
                                 const Text('Failed to load commodities'),
                           ),
@@ -170,33 +170,33 @@ class MarketPricesScreen extends ConsumerWidget {
                               style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).colorScheme.onSurface)),
+                                  color: Theme.of(context).colorScheme.onSurface,),),
                           const SizedBox(height: 8),
                           marketsAsync.when(
                             data: (markets) => DropdownButtonFormField<String>(
-                              value: markets.contains(notifier.currentMarket)
+                              initialValue: markets.contains(notifier.currentMarket)
                                   ? notifier.currentMarket
                                   : null,
                               decoration: InputDecoration(
                                 contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
+                                    horizontal: 16, vertical: 12,),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                   borderSide: BorderSide(
                                       color: Theme.of(context)
                                           .colorScheme
-                                          .outlineVariant),
+                                          .outlineVariant,),
                                 ),
                                 hintText: 'Select Market',
                               ),
                               items: markets.map((m) =>
-                                  DropdownMenuItem(value: m, child: Text(m))).toList(),
+                                  DropdownMenuItem(value: m, child: Text(m)),).toList(),
                               onChanged: (val) {
                                 notifier.fetchPrices(market: val);
                               },
                             ),
                             loading: () => const Center(
-                                child: CircularProgressIndicator()),
+                                child: CircularProgressIndicator(),),
                             error: (_, __) =>
                                 const Text('Failed to load markets'),
                           ),
@@ -207,13 +207,13 @@ class MarketPricesScreen extends ConsumerWidget {
                             icon: const Icon(LucideIcons.refreshCw, size: 18),
                             label: const Text('Check Prices',
                                 style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold)),
+                                    fontSize: 16, fontWeight: FontWeight.bold,),),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green.shade700,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
+                                  borderRadius: BorderRadius.circular(8),),
                               elevation: 2,
                             ),
                           ),
@@ -296,7 +296,7 @@ class MarketPricesScreen extends ConsumerWidget {
                               'Showing offline cached APMC Mandi rates.',
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.amber.shade900),
+                                  color: Colors.amber.shade900,),
                             ),
                           ),
                         ],

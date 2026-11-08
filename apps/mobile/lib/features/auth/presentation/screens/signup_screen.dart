@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/compass_logo.dart';
 import '../providers/auth_provider.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -73,6 +74,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    const Center(
+                      child: CompassBrandHeader(
+                        iconSize: 36,
+                        fontSize: 26,
+                        animated: true,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                     const Text(
                       'Create your account',
                       textAlign: TextAlign.center,

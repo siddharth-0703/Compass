@@ -216,7 +216,7 @@ class MarketRepository {
         'Narayangaon APMC',
         'Kolhapur APMC',
         'Solapur APMC',
-        'Jalgaon APMC'
+        'Jalgaon APMC',
       ];
     } else if (state.toLowerCase().contains('madhya pradesh')) {
       return ['All Markets', 'Indore APMC', 'Bhopal APMC', 'Ujjain APMC', 'Neemuch APMC'];

@@ -107,7 +107,7 @@ class BusinessRepository {
           'state': b.locationState,
           'district': b.locationDistrict,
         },
-      }).toList();
+      },).toList();
       await HiveStorage.settingsBox.put('cached_businesses', jsonList);
       return true;
     }

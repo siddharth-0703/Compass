@@ -79,7 +79,7 @@ class _RegisterBusinessScreenState
 
     if (mounted) {
       if (success) {
-        ref.refresh(myBusinessesProvider);
+        ref.invalidate(myBusinessesProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Business registered successfully!'),
@@ -103,7 +103,7 @@ class _RegisterBusinessScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Register New Business',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(fontWeight: FontWeight.bold),),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -135,7 +135,7 @@ class _RegisterBusinessScreenState
                   labelText: 'Business Name *',
                   hintText: 'e.g., Krishi Kalyan Agro Producers',
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),),
                   prefixIcon: const Icon(Icons.storefront_outlined),
                 ),
                 validator: (val) =>
@@ -143,11 +143,11 @@ class _RegisterBusinessScreenState
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _category,
+                initialValue: _category,
                 decoration: InputDecoration(
                   labelText: 'Industry Sector *',
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),),
                   prefixIcon: const Icon(Icons.category_outlined),
                 ),
                 items: _categories
@@ -164,7 +164,7 @@ class _RegisterBusinessScreenState
                   hintText:
                       'Describe your products, manufacturing methods, or crops...',
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),),
                 ),
               ),
               const SizedBox(height: 16),
@@ -172,11 +172,11 @@ class _RegisterBusinessScreenState
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _stage,
+                      initialValue: _stage,
                       decoration: InputDecoration(
                         labelText: 'Stage',
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),),
                       ),
                       items: _stages
                           .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -192,7 +192,7 @@ class _RegisterBusinessScreenState
                       decoration: InputDecoration(
                         labelText: 'Employees',
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),),
                         prefixIcon: const Icon(Icons.people_outline),
                       ),
                     ),
@@ -204,11 +204,11 @@ class _RegisterBusinessScreenState
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _state,
+                      initialValue: _state,
                       decoration: InputDecoration(
                         labelText: 'State',
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),),
                       ),
                       items: _states
                           .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -223,7 +223,7 @@ class _RegisterBusinessScreenState
                       decoration: InputDecoration(
                         labelText: 'District',
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),),
                       ),
                       onChanged: (val) => _district = val,
                     ),
@@ -238,7 +238,7 @@ class _RegisterBusinessScreenState
                   onPressed: _isLoading ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),),
                     backgroundColor:
                         Theme.of(context).colorScheme.primary,
                     foregroundColor:
@@ -249,12 +249,12 @@ class _RegisterBusinessScreenState
                           height: 24,
                           width: 24,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2.5, color: Colors.white),
+                              strokeWidth: 2.5, color: Colors.white,),
                         )
                       : const Text(
                           'Submit Business Registration',
                           style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
+                              fontSize: 16, fontWeight: FontWeight.bold,),
                         ),
                 ),
               ),

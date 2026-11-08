@@ -66,11 +66,11 @@ class _ObservabilityScreenState extends State<ObservabilityScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Platform Observability',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(fontWeight: FontWeight.bold),),
         actions: [
           IconButton(
             icon: Icon(LucideIcons.refreshCw,
-                size: 20, color: _isRefreshing ? Colors.grey : null),
+                size: 20, color: _isRefreshing ? Colors.grey : null,),
             onPressed: _isRefreshing ? null : _refresh,
           ),
         ],
@@ -97,7 +97,7 @@ class _ObservabilityScreenState extends State<ObservabilityScreen> {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(LucideIcons.checkCircle2,
-                        color: Colors.green, size: 24),
+                        color: Colors.green, size: 24,),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -109,7 +109,7 @@ class _ObservabilityScreenState extends State<ObservabilityScreen> {
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
-                              color: Colors.green),
+                              color: Colors.green,),
                         ),
                         Text(
                           '99.98% platform uptime • Last checked: $_lastChecked',
@@ -173,7 +173,7 @@ class _ObservabilityScreenState extends State<ObservabilityScreen> {
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                    borderRadius: BorderRadius.circular(16),),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
@@ -194,7 +194,7 @@ class _ObservabilityScreenState extends State<ObservabilityScreen> {
                             Text(
                               sub['title'],
                               style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 15),
+                                  fontWeight: FontWeight.bold, fontSize: 15,),
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -212,12 +212,12 @@ class _ObservabilityScreenState extends State<ObservabilityScreen> {
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                            horizontal: 10, vertical: 4,),
                         decoration: BoxDecoration(
                           color: Colors.green.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                              color: Colors.green.withValues(alpha: 0.3)),
+                              color: Colors.green.withValues(alpha: 0.3),),
                         ),
                         child: Text(
                           sub['status'],
@@ -239,7 +239,7 @@ class _ObservabilityScreenState extends State<ObservabilityScreen> {
             // Audit Log Card
             Card(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -321,17 +321,17 @@ class _ObservabilityScreenState extends State<ObservabilityScreen> {
             width: 8,
             height: 8,
             decoration: const BoxDecoration(
-                color: Colors.green, shape: BoxShape.circle),
+                color: Colors.green, shape: BoxShape.circle,),
           ),
           const SizedBox(width: 8),
           Text(label,
               style:
-                  const TextStyle(fontFamily: 'monospace', fontSize: 12, fontWeight: FontWeight.bold)),
+                  const TextStyle(fontFamily: 'monospace', fontSize: 12, fontWeight: FontWeight.bold),),
           const Spacer(),
           Text(detail,
               style: TextStyle(
                   fontSize: 11,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),),),
         ],
       ),
     );

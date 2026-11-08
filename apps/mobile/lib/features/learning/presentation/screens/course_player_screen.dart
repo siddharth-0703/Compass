@@ -3,12 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import '../providers/learning_provider.dart';
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/lesson_progress.dart';
+import '../../data/services/video_stream_resolver.dart';
 import '../../../../core/download/providers/download_provider.dart';
 import '../../../../core/download/models/download_task.dart';
 
@@ -32,20 +31,20 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
   int _positionSeconds = 0;
   Timer? _playbackTimer;
   Timer? _syncTimer;
+  Timer? _controlsTimer;
   bool _syncPending = false;
-  final double _playbackSpeed = 1.0;
+  double _playbackSpeed = 1.0;
 
-  // Real Video Player State
-  bool _isYoutube = true;
-  YoutubePlayerController? _youtubeController;
-  StreamSubscription<YoutubeVideoState>? _ytStateSubscription;
-  StreamSubscription<YoutubePlayerValue>? _ytValueSubscription;
-
+  // Custom Video Player State (100% In-App, Zero External App)
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
   bool _isVideoBuffering = false;
   bool _isVideoError = false;
+  String _errorMessage = '';
   bool _isOfflinePlayback = false;
+  bool _showControls = true;
+  bool _isFullscreen = false;
+  double _dragSliderPosition = -1;
 
   @override
   void initState() {
@@ -57,9 +56,7 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
   void dispose() {
     _playbackTimer?.cancel();
     _syncTimer?.cancel();
-    _ytStateSubscription?.cancel();
-    _ytValueSubscription?.cancel();
-    _youtubeController?.close();
+    _controlsTimer?.cancel();
     _videoController?.removeListener(_videoListener);
     _videoController?.dispose();
     _flushProgressSync();
@@ -88,7 +85,7 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
         defaultYt;
   }
 
-  void _initVideoForCurrentLesson({bool autoPlay = false}) {
+  Future<void> _initVideoForCurrentLesson({bool autoPlay = false}) async {
     final mediaUrl = _getMediaUrl();
     if (mediaUrl.isEmpty) return;
 
@@ -105,155 +102,95 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
     }
 
     _playbackTimer?.cancel();
-    _ytStateSubscription?.cancel();
-    _ytStateSubscription = null;
-    _ytValueSubscription?.cancel();
-    _ytValueSubscription = null;
-    _youtubeController?.close();
-    _youtubeController = null;
-
+    _controlsTimer?.cancel();
     _videoController?.removeListener(_videoListener);
     _videoController?.dispose();
     _videoController = null;
-
-    final ytId = YoutubePlayerController.convertUrlToId(mediaUrl);
 
     setState(() {
       _isOfflinePlayback = localPath != null;
       _isVideoInitialized = false;
       _isVideoBuffering = true;
       _isVideoError = false;
-      _isYoutube = localPath == null && ytId != null && ytId.isNotEmpty;
+      _errorMessage = '';
+      _showControls = true;
     });
 
-    if (localPath != null) {
-      // Offline local file playback
-      final controller = VideoPlayerController.file(File(localPath));
+    try {
+      VideoPlayerController controller;
+
+      if (localPath != null) {
+        // 1. Play directly from offline downloaded file (Zero mobile data)
+        controller = VideoPlayerController.file(File(localPath));
+      } else {
+        // 2. Resolve direct MP4 in-app stream URL
+        final streamInfo = await VideoStreamResolver.resolve(mediaUrl);
+        if (streamInfo == null || streamInfo.streamUrl.isEmpty) {
+          throw Exception('Unable to resolve video stream. Please check connection or download while online.');
+        }
+        controller = VideoPlayerController.networkUrl(
+          Uri.parse(streamInfo.streamUrl),
+        );
+      }
+
       _videoController = controller;
-      controller.initialize().then((_) {
-        if (!mounted || _videoController != controller) return;
-        controller.addListener(_videoListener);
-        controller.setPlaybackSpeed(_playbackSpeed);
-        setState(() {
-          _isVideoInitialized = true;
-          _isVideoBuffering = false;
-          if (_positionSeconds > 0 &&
-              _positionSeconds < controller.value.duration.inSeconds) {
-            controller.seekTo(Duration(seconds: _positionSeconds));
-          }
-          if (autoPlay) {
-            _isPlaying = true;
-            controller.play();
-          }
-        });
-      }).catchError((err) {
-        if (!mounted || _videoController != controller) return;
-        setState(() {
-          _isVideoError = true;
-          _isVideoBuffering = false;
-        });
-      });
-    } else if (_isYoutube && ytId != null) {
-      // 1:1 YouTube embed matching web version
-      final ytController = YoutubePlayerController.fromVideoId(
-        videoId: ytId,
-        params: const YoutubePlayerParams(
-          showControls: true,
-          showFullscreenButton: true,
-          mute: false,
-          enableCaption: true,
-          showVideoAnnotations: false,
-        ),
-      );
+      await controller.initialize();
 
-      _youtubeController = ytController;
-      _ytStateSubscription = ytController.videoStateStream.listen((state) {
-        if (!mounted) return;
-        final posSec = state.position.inSeconds;
-        if (posSec != _positionSeconds) {
-          setState(() {
-            _positionSeconds = posSec;
-            _syncPending = true;
-          });
-          final durSec = _currentLesson?.durationSeconds ?? 0;
-          if (durSec > 0 && (posSec / durSec) >= 0.9) {
-            _markLessonComplete(isAuto: true);
-          }
-        }
-      });
+      if (!mounted || _videoController != controller) return;
 
-      _ytValueSubscription = ytController.listen((event) {
-        if (!mounted) return;
-        final isPlaying = event.playerState == PlayerState.playing;
-        if (isPlaying != _isPlaying) {
-          setState(() {
-            _isPlaying = isPlaying;
-          });
-        }
-      });
+      controller.addListener(_videoListener);
+      await controller.setPlaybackSpeed(_playbackSpeed);
 
       setState(() {
         _isVideoInitialized = true;
         _isVideoBuffering = false;
+        if (_positionSeconds > 0 &&
+            _positionSeconds < controller.value.duration.inSeconds) {
+          controller.seekTo(Duration(seconds: _positionSeconds));
+        }
+        if (autoPlay) {
+          _isPlaying = true;
+          controller.play();
+          _scheduleControlsHide();
+        }
       });
-    } else {
-      // Direct MP4 network fallback
-      final controller = VideoPlayerController.networkUrl(
-        Uri.parse(mediaUrl),
-        httpHeaders: const {'User-Agent': 'Mozilla/5.0 Compass/1.0'},
-      );
-      _videoController = controller;
-      controller.initialize().then((_) {
-        if (!mounted || _videoController != controller) return;
-        controller.addListener(_videoListener);
-        setState(() {
-          _isVideoInitialized = true;
-          _isVideoBuffering = false;
-          if (autoPlay) {
-            _isPlaying = true;
-            controller.play();
-          }
-        });
-      }).catchError((err) {
-        if (!mounted) return;
-        setState(() {
-          _isVideoError = true;
-          _isVideoBuffering = false;
-        });
+    } catch (err) {
+      if (!mounted) return;
+      setState(() {
+        _isVideoError = true;
+        _isVideoBuffering = false;
+        _errorMessage = err.toString();
       });
     }
   }
 
   void _videoListener() {
-    if (!mounted || _videoController == null || !_isVideoInitialized) return;
+    if (!mounted || _videoController == null) return;
     final value = _videoController!.value;
-    final newPos = value.position.inSeconds;
-    final isPlaying = value.isPlaying;
-    final isBuffering = value.isBuffering;
 
-    if (newPos != _positionSeconds ||
-        isPlaying != _isPlaying ||
-        isBuffering != _isVideoBuffering) {
+    final posSec = value.position.inSeconds;
+    final isBuffering = value.isBuffering;
+    final isPlaying = value.isPlaying;
+
+    if (posSec != _positionSeconds ||
+        isBuffering != _isVideoBuffering ||
+        isPlaying != _isPlaying) {
       setState(() {
-        _positionSeconds = newPos;
-        _isPlaying = isPlaying;
+        _positionSeconds = posSec;
         _isVideoBuffering = isBuffering;
+        _isPlaying = isPlaying;
         _syncPending = true;
       });
 
-      final totalDuration =
-          _currentLesson?.durationSeconds ?? value.duration.inSeconds;
-      if (totalDuration > 0) {
-        final percent = (newPos / totalDuration) * 100;
-        if (percent >= 90.0) {
-          _markLessonComplete(isAuto: true);
-        }
+      final durSec = value.duration.inSeconds;
+      if (durSec > 0 && (posSec / durSec) >= 0.9) {
+        _markLessonComplete(isAuto: true);
       }
     }
   }
 
   void _startSyncTimer() {
-    _syncTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
+    _syncTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (_syncPending) {
         _flushProgressSync();
       }
@@ -268,32 +205,119 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
             _isVideoInitialized &&
             _videoController!.value.duration.inSeconds > 0
         ? _videoController!.value.duration.inSeconds
-        : _currentLesson!.durationSeconds;
+        : (_currentLesson!.durationSeconds > 0
+            ? _currentLesson!.durationSeconds
+            : 1);
 
-    final percent = dur > 0 ? (_positionSeconds / dur) * 100 : 0.0;
+    final pct = ((_positionSeconds / dur) * 100).clamp(0.0, 100.0);
+    final completed = pct >= 90.0;
+
     ref.read(learningNotifierProvider.notifier).updateLessonProgress(
           courseId: widget.courseId,
           moduleId: _findModuleIdForLesson(_currentLesson!.id),
           lessonId: _currentLesson!.id,
           positionSeconds: _positionSeconds,
           durationSeconds: dur,
-          percentage: percent,
-          completed: percent >= 90.0,
+          percentage: pct,
+          completed: completed,
         );
   }
 
   String _findModuleIdForLesson(String lessonId) {
-    final learningState = ref.read(learningNotifierProvider);
-    final course = learningState.resources.firstWhere(
+    final state = ref.read(learningNotifierProvider);
+    final course = state.resources.firstWhere(
       (r) => r.id == widget.courseId,
-      orElse: () => learningState.resources.first,
+      orElse: () => state.resources.first,
     );
-    for (final mod in course.modules) {
+    for (var mod in course.modules) {
       if (mod.lessons.any((l) => l.id == lessonId)) {
         return mod.id;
       }
     }
     return '';
+  }
+
+  void _togglePlayPause() {
+    if (_videoController == null || !_isVideoInitialized) return;
+
+    if (_videoController!.value.isPlaying) {
+      _videoController!.pause();
+      setState(() => _showControls = true);
+      _controlsTimer?.cancel();
+    } else {
+      _videoController!.play();
+      _scheduleControlsHide();
+    }
+  }
+
+  void _seekRelative(int seconds) {
+    if (_videoController == null || !_isVideoInitialized) return;
+    final current = _videoController!.value.position;
+    final total = _videoController!.value.duration;
+    var target = current + Duration(seconds: seconds);
+    if (target < Duration.zero) target = Duration.zero;
+    if (target > total) target = total;
+
+    _videoController!.seekTo(target);
+    _scheduleControlsHide();
+  }
+
+  void _scheduleControlsHide() {
+    _controlsTimer?.cancel();
+    _controlsTimer = Timer(const Duration(milliseconds: 3500), () {
+      if (mounted && _isPlaying) {
+        setState(() => _showControls = false);
+      }
+    });
+  }
+
+  void _toggleControlsVisibility() {
+    setState(() {
+      _showControls = !_showControls;
+    });
+    if (_showControls && _isPlaying) {
+      _scheduleControlsHide();
+    }
+  }
+
+  void _changeSpeed(double speed) {
+    setState(() => _playbackSpeed = speed);
+    _videoController?.setPlaybackSpeed(speed);
+    Navigator.of(context).pop();
+  }
+
+  void _showSpeedDialog() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Playback Speed',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const Divider(height: 1),
+              for (var speed in [0.5, 0.75, 1.0, 1.25, 1.5, 2.0])
+                ListTile(
+                  title: Text('${speed}x'),
+                  trailing: _playbackSpeed == speed
+                      ? const Icon(Icons.check, color: Color(0xFF0D9488))
+                      : null,
+                  onTap: () => _changeSpeed(speed),
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _markLessonComplete({bool isAuto = false}) {
@@ -330,6 +354,7 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
 
     _flushProgressSync();
     _playbackTimer?.cancel();
+    _controlsTimer?.cancel();
 
     final prog = progressList.firstWhere(
       (p) => p.lessonId == lesson.id,
@@ -357,46 +382,83 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
     });
   }
 
-  Future<void> _openExternalStream(String url) async {
-    final ytId = YoutubePlayerController.convertUrlToId(url);
-    final target = (ytId != null && ytId.isNotEmpty)
-        ? 'https://www.youtube.com/watch?v=$ytId'
-        : url;
-    final uri = Uri.parse(target);
+  String _formatDuration(Duration d) {
+    final hours = d.inHours;
+    final minutes = d.inMinutes.remainder(60);
+    final seconds = d.inSeconds.remainder(60);
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
 
-    bool launched = false;
+  Future<void> _startDownloadForCurrentLesson() async {
+    if (_currentLesson == null) return;
+    final lesson = _currentLesson!;
+    final mediaUrl = _getMediaUrl();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Preparing high-quality video for offline download...'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
     try {
-      launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {
-      launched = false;
-    }
+      final streamInfo = await VideoStreamResolver.resolve(mediaUrl);
+      if (streamInfo == null || streamInfo.streamUrl.isEmpty) {
+        throw Exception('Could not fetch video download link.');
+      }
 
-    if (!launched) {
-      try {
-        launched = await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
-      } catch (_) {
-        launched = false;
+      await ref.read(downloadTasksProvider.notifier).enqueue(
+            lesson.id,
+            streamInfo.streamUrl,
+            '${lesson.id}.mp4',
+            streamInfo.totalBytes > 0 ? streamInfo.totalBytes : 35000000,
+          );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Downloading started! You can watch offline once done.'),
+            backgroundColor: Color(0xFF0F766E),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Download failed: $e'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
+  }
 
-    if (!launched) {
-      try {
-        launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
-      } catch (_) {
-        launched = false;
+  Future<void> _deleteDownloadedLesson() async {
+    if (_currentLesson == null) return;
+    final lessonId = _currentLesson!.id;
+    final tasks = ref.read(downloadTasksProvider);
+    final task = tasks[lessonId];
+    if (task != null) {
+      await ref.read(downloadTasksProvider.notifier).cancel(lessonId);
+      final file = File(task.savePath);
+      if (await file.exists()) {
+        await file.delete();
       }
     }
-
-    if (!launched && mounted) {
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Playing directly in application player with offline zero-data support.',
-          ),
-          backgroundColor: Color(0xFF166534),
+          content: Text('Downloaded video removed.'),
           behavior: SnackBarBehavior.floating,
         ),
       );
+      _initVideoForCurrentLesson();
     }
   }
 
@@ -405,8 +467,18 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
     final learningState = ref.watch(learningNotifierProvider);
     final progressAsync = ref.watch(courseProgressProvider(widget.courseId));
     final downloadTasks = ref.watch(downloadTasksProvider);
-
     final isDesktop = MediaQuery.of(context).size.width > 900;
+
+    if (_isFullscreen) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Center(
+            child: _buildCustomVideoPlayerWidget(isFullscreen: true),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -479,7 +551,7 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
                 Widget playerSection = Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildVideoPlayer(),
+                    _buildCustomVideoPlayerWidget(isFullscreen: false),
                     const SizedBox(height: 16),
                     _buildActionButtons(currentTask),
                     const SizedBox(height: 16),
@@ -631,67 +703,107 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
     );
   }
 
-  Widget _buildVideoPlayer() {
+  /// 100% Custom Player Widget (ExoPlayer Flutter texture, zero external app redirects, zero YouTube branding)
+  Widget _buildCustomVideoPlayerWidget({required bool isFullscreen}) {
     if (_currentLesson == null) return const SizedBox();
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF101418),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black38,
-            blurRadius: 16,
-            offset: Offset(0, 6),
-          ),
-        ],
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(isFullscreen ? 0 : 16),
+        boxShadow: isFullscreen
+            ? null
+            : const [
+                BoxShadow(
+                  color: Colors.black45,
+                  blurRadius: 18,
+                  offset: Offset(0, 6),
+                ),
+              ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(isFullscreen ? 0 : 16),
         child: AspectRatio(
           aspectRatio: 16 / 9,
           child: Stack(
+            fit: StackFit.expand,
             alignment: Alignment.center,
             children: [
-              // 1. YouTube Player (1:1 with Web Version)
-              if (_isYoutube && _youtubeController != null)
-                YoutubePlayer(
-                  controller: _youtubeController!,
-                  aspectRatio: 16 / 9,
+              // 1. Direct Hardware Video Surface
+              if (_videoController != null && _isVideoInitialized)
+                Center(
+                  child: AspectRatio(
+                    aspectRatio: _videoController!.value.aspectRatio,
+                    child: VideoPlayer(_videoController!),
+                  ),
                 )
-              // 2. Hardware Video Player for Offline Downloaded Files
-              else if (_videoController != null && _isVideoInitialized)
-                VideoPlayer(_videoController!)
-              // 3. Backdrop Placeholder while initializing
               else
                 Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFF142417), Color(0xFF181F26)],
+                      colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                   ),
+                  child: Center(
+                    child: Icon(
+                      LucideIcons.playCircle,
+                      size: 64,
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
+                  ),
                 ),
 
-              // 4. Buffering / Loading Indicator
+              // 2. Gesture Detector for Controls and Double-Tap Seek
+              Row(
+                children: [
+                  // Left Double Tap: -10s
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: _toggleControlsVisibility,
+                      onDoubleTap: () => _seekRelative(-10),
+                    ),
+                  ),
+                  // Right Double Tap: +10s
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: _toggleControlsVisibility,
+                      onDoubleTap: () => _seekRelative(10),
+                    ),
+                  ),
+                ],
+              ),
+
+              // 3. Buffering / Loading State
               if (_isVideoBuffering)
                 Container(
-                  color: Colors.black38,
-                  child: const Center(
+                  color: Colors.black45,
+                  child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        CircularProgressIndicator(
-                          color: Colors.greenAccent,
+                        const SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFF2DD4BF),
+                            ),
+                          ),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 14),
                         Text(
-                          'Loading YouTube Stream...',
-                          style: TextStyle(
+                          _isOfflinePlayback
+                              ? 'Loading Offline Media...'
+                              : 'Streaming In-App HD Video...',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -699,50 +811,54 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
                   ),
                 ),
 
-              // 5. Error Fallback
+              // 4. Error State
               if (_isVideoError)
                 Container(
                   color: Colors.black87,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
-                          LucideIcons.alertTriangle,
+                          LucideIcons.alertCircle,
                           color: Colors.amberAccent,
-                          size: 36,
+                          size: 40,
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
                         const Text(
-                          'Streaming issue detected',
+                          'Playback Error',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontSize: 16,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Tap retry or use the external stream button below',
+                        const SizedBox(height: 6),
+                        Text(
+                          _errorMessage.isNotEmpty
+                              ? _errorMessage
+                              : 'Could not play video stream.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 12,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade700,
+                            backgroundColor: const Color(0xFF0D9488),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
+                              horizontal: 18,
+                              vertical: 10,
                             ),
                           ),
                           icon: const Icon(LucideIcons.refreshCw, size: 14),
-                          label: const Text('Retry Stream'),
+                          label: const Text('Retry Playback'),
                           onPressed: () =>
                               _initVideoForCurrentLesson(autoPlay: true),
                         ),
@@ -751,45 +867,275 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
                   ),
                 ),
 
-              // 6. Header Badges Overlay (Shown only for offline player or non-youtube)
-              if (_isOfflinePlayback)
-                Positioned(
-                  top: 12,
-                  left: 12,
+              // 5. Custom Player Controls Overlay
+              AnimatedOpacity(
+                opacity: _showControls ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 250),
+                child: IgnorePointer(
+                  ignoring: !_showControls,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0F766E).withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.tealAccent,
-                        width: 0.8,
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.black.withValues(alpha: 0.75),
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.85),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: const [0.0, 0.45, 1.0],
                       ),
                     ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(
-                          LucideIcons.hardDrive,
-                          color: Colors.tealAccent,
-                          size: 11,
+                        // Top Bar: Lesson title & Badges & Fullscreen
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14.0,
+                            vertical: 10.0,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _isOfflinePlayback
+                                      ? const Color(0xFF0F766E)
+                                      : const Color(0xFF1E293B),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _isOfflinePlayback
+                                        ? const Color(0xFF2DD4BF)
+                                        : Colors.white24,
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _isOfflinePlayback
+                                          ? LucideIcons.hardDrive
+                                          : LucideIcons.tv,
+                                      color: _isOfflinePlayback
+                                          ? const Color(0xFF2DD4BF)
+                                          : Colors.white70,
+                                      size: 12,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _isOfflinePlayback
+                                          ? 'OFFLINE ZERO-DATA'
+                                          : 'IN-APP HD',
+                                      style: TextStyle(
+                                        color: _isOfflinePlayback
+                                            ? Colors.white
+                                            : Colors.white70,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.speed,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                tooltip: 'Playback Speed',
+                                onPressed: _showSpeedDialog,
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  isFullscreen
+                                      ? Icons.fullscreen_exit_rounded
+                                      : Icons.fullscreen_rounded,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                                tooltip: 'Toggle Fullscreen',
+                                onPressed: () {
+                                  setState(() => _isFullscreen = !_isFullscreen);
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                        SizedBox(width: 6),
-                        Text(
-                          'OFFLINE (ZERO-DATA)',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+
+                        // Center: Rewind, Large Play/Pause, Forward
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Rewind 10s
+                            IconButton(
+                              iconSize: 34,
+                              icon: const Icon(
+                                Icons.replay_10_rounded,
+                                color: Colors.white,
+                              ),
+                              tooltip: 'Rewind 10s',
+                              onPressed: () => _seekRelative(-10),
+                            ),
+                            const SizedBox(width: 24),
+                            // Large Play/Pause Button
+                            GestureDetector(
+                              onTap: _togglePlayPause,
+                              child: Container(
+                                width: 58,
+                                height: 58,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: const Color(0xFF0D9488),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF2DD4BF)
+                                          .withValues(alpha: 0.4),
+                                      blurRadius: 18,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    _isPlaying
+                                        ? Icons.pause_rounded
+                                        : Icons.play_arrow_rounded,
+                                    color: Colors.white,
+                                    size: 34,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 24),
+                            // Fast-Forward 10s
+                            IconButton(
+                              iconSize: 34,
+                              icon: const Icon(
+                                Icons.forward_10_rounded,
+                                color: Colors.white,
+                              ),
+                              tooltip: 'Forward 10s',
+                              onPressed: () => _seekRelative(10),
+                            ),
+                          ],
+                        ),
+
+                        // Bottom: Position, Scrubber Slider, Duration
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    _videoController != null &&
+                                            _isVideoInitialized
+                                        ? _formatDuration(
+                                            _videoController!.value.position,
+                                          )
+                                        : '0:00',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: SliderTheme(
+                                      data: SliderTheme.of(context).copyWith(
+                                        activeTrackColor:
+                                            const Color(0xFF2DD4BF),
+                                        inactiveTrackColor: Colors.white24,
+                                        thumbColor: const Color(0xFF2DD4BF),
+                                        overlayColor: const Color(0xFF2DD4BF)
+                                            .withValues(alpha: 0.2),
+                                        thumbShape: const RoundSliderThumbShape(
+                                          enabledThumbRadius: 6,
+                                        ),
+                                        trackHeight: 3.5,
+                                      ),
+                                      child: Slider(
+                                        min: 0.0,
+                                        max: _videoController != null &&
+                                                _isVideoInitialized &&
+                                                _videoController!
+                                                        .value.duration.inSeconds >
+                                                    0
+                                            ? _videoController!
+                                                .value.duration.inSeconds
+                                                .toDouble()
+                                            : 100.0,
+                                        value: _dragSliderPosition >= 0
+                                            ? _dragSliderPosition
+                                            : (_videoController != null &&
+                                                    _isVideoInitialized
+                                                ? _videoController!
+                                                    .value.position.inSeconds
+                                                    .toDouble()
+                                                    .clamp(
+                                                      0.0,
+                                                      _videoController!.value
+                                                          .duration.inSeconds
+                                                          .toDouble(),
+                                                    )
+                                                : 0.0),
+                                        onChangeStart: (val) {
+                                          setState(() =>
+                                              _dragSliderPosition = val,);
+                                          _controlsTimer?.cancel();
+                                        },
+                                        onChanged: (val) {
+                                          setState(() =>
+                                              _dragSliderPosition = val,);
+                                        },
+                                        onChangeEnd: (val) {
+                                          if (_videoController != null &&
+                                              _isVideoInitialized) {
+                                            _videoController!.seekTo(
+                                              Duration(seconds: val.toInt()),
+                                            );
+                                          }
+                                          setState(
+                                            () => _dragSliderPosition = -1,
+                                          );
+                                          _scheduleControlsHide();
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    _videoController != null &&
+                                            _isVideoInitialized
+                                        ? _formatDuration(
+                                            _videoController!.value.duration,
+                                          )
+                                        : (_currentLesson != null
+                                            ? '${_currentLesson!.durationMinutes}:00'
+                                            : '0:00'),
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
+              ),
             ],
           ),
         ),
@@ -798,7 +1144,6 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
   }
 
   Widget _buildActionButtons(DownloadTask? currentTask) {
-    final mediaUrl = _getMediaUrl();
     final isDownloaded = currentTask?.state == DownloadState.completed &&
         currentTask?.savePath != null &&
         File(currentTask!.savePath).existsSync();
@@ -812,102 +1157,77 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
         : 0;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            // External Stream Button
-            Expanded(
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                icon: const Icon(LucideIcons.externalLink, size: 16),
-                label: const Text(
-                  'Stream Full Video',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-                onPressed: () => _openExternalStream(mediaUrl),
-              ),
-            ),
-            const SizedBox(width: 10),
-            // Download Offline Button
+            // Download / Offline Button
             Expanded(
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isDownloaded
-                      ? const Color(0xFF166534)
-                      : const Color(0xFF0F766E),
+                      ? const Color(0xFF166534) // Emerald-800
+                      : const Color(0xFF0F766E), // Teal-700
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 icon: Icon(
                   isDownloaded
-                      ? LucideIcons.checkCircle
+                      ? LucideIcons.checkCheck
                       : (isDownloading
                           ? LucideIcons.loader
                           : LucideIcons.download),
-                  size: 16,
+                  size: 18,
                 ),
                 label: Text(
                   isDownloaded
-                      ? 'Offline Ready ✓'
+                      ? 'Downloaded (Offline Ready ✓)'
                       : (isDownloading
-                          ? 'Downloading $progressPct%'
-                          : 'Download Video'),
+                          ? 'Downloading ($progressPct%)...'
+                          : 'Download Lesson (Offline)'),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    fontSize: 14,
                   ),
                 ),
-                onPressed: () async {
+                onPressed: () {
                   if (isDownloaded) {
-                    _initVideoForCurrentLesson(autoPlay: true);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
-                          'Now playing downloaded offline video with zero data usage!',
+                          'Video saved locally. Plays offline with zero mobile data.',
                         ),
-                        backgroundColor: Color(0xFF166534),
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
                   } else if (!isDownloading) {
-                    final lessonId = _currentLesson?.id ?? 'video_01';
-                    // Companion offline video file for zero-data review
-                    await ref.read(downloadTasksProvider.notifier).enqueue(
-                          lessonId,
-                          'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
-                          '$lessonId.mp4',
-                          1048576,
-                        );
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Downloading video for offline zero-data playback...',
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
+                    _startDownloadForCurrentLesson();
                   }
                 },
               ),
             ),
+            if (isDownloaded) ...[
+              const SizedBox(width: 8),
+              IconButton.filledTonal(
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.red.withValues(alpha: 0.1),
+                  foregroundColor: Colors.redAccent,
+                  padding: const EdgeInsets.all(12),
+                ),
+                icon: const Icon(LucideIcons.trash2, size: 18),
+                tooltip: 'Delete downloaded video',
+                onPressed: _deleteDownloadedLesson,
+              ),
+            ],
           ],
         ),
         if (isDownloading) ...[
           const SizedBox(height: 8),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
               value: progressPct > 0 ? progressPct / 100 : null,
               backgroundColor: Colors.grey.shade200,
@@ -1001,141 +1321,101 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
             ),
           ),
           const Divider(height: 1),
-          ListView.builder(
+          ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(8.0),
             itemCount: lessons.length,
+            separatorBuilder: (context, index) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final lesson = lessons[index];
-              final isActive = lesson.id == _currentLesson?.id;
-              final isCompleted = progressList
-                  .any((p) => p.lessonId == lesson.id && p.completed);
-              final isTaskDownloaded =
-                  downloadTasks[lesson.id]?.state == DownloadState.completed &&
-                      downloadTasks[lesson.id]?.savePath != null &&
-                      File(downloadTasks[lesson.id]!.savePath).existsSync();
+              final isCurrent = _currentLesson?.id == lesson.id;
+              final prog = progressList.firstWhere(
+                (p) => p.lessonId == lesson.id,
+                orElse: () => LessonProgress(
+                  userId: '',
+                  courseId: widget.courseId,
+                  moduleId: '',
+                  lessonId: lesson.id,
+                  positionSeconds: 0,
+                  durationSeconds: lesson.durationSeconds,
+                  percentage: 0,
+                  completed: false,
+                  clientUpdatedAt: DateTime.now(),
+                ),
+              );
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 6.0),
-                child: InkWell(
-                  onTap: () => _onLessonSelect(lesson, progressList),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? Colors.green.withValues(alpha: 0.12)
-                          : Colors.transparent,
-                      border: Border.all(
-                        color: isActive
-                            ? Colors.green.withValues(alpha: 0.3)
-                            : Colors.transparent,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(right: 12),
-                          child: isCompleted
-                              ? const Icon(
-                                  LucideIcons.checkCircle,
-                                  color: Color(0xFF3A9742),
-                                  size: 20,
-                                )
-                              : isActive
-                                  ? const Icon(
-                                      LucideIcons.play,
-                                      color: Colors.green,
-                                      size: 20,
-                                    )
-                                  : Container(
-                                      width: 22,
-                                      height: 22,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withValues(alpha: 0.3),
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        '${index + 1}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withValues(alpha: 0.5),
-                                        ),
-                                      ),
-                                    ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                lesson.title,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: isActive
-                                      ? FontWeight.bold
-                                      : FontWeight.w500,
-                                  color: isActive
-                                      ? Theme.of(context).colorScheme.onSurface
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.8),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Text(
-                                    '${lesson.durationSeconds ~/ 60} mins',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.5),
-                                    ),
-                                  ),
-                                  if (isTaskDownloaded) ...[
-                                    const SizedBox(width: 8),
-                                    const Icon(
-                                      LucideIcons.downloadCloud,
-                                      size: 12,
-                                      color: Colors.green,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Text(
-                                      'Offline Ready',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+              final isDownloaded = downloadTasks[lesson.id]?.state ==
+                      DownloadState.completed &&
+                  File(downloadTasks[lesson.id]?.savePath ?? '').existsSync();
+
+              return ListTile(
+                selected: isCurrent,
+                selectedTileColor:
+                    const Color(0xFF0D9488).withValues(alpha: 0.1),
+                leading: CircleAvatar(
+                  backgroundColor: isCurrent
+                      ? const Color(0xFF0D9488)
+                      : (prog.completed
+                          ? Colors.green.shade100
+                          : Colors.grey.shade100),
+                  foregroundColor: isCurrent
+                      ? Colors.white
+                      : (prog.completed
+                          ? Colors.green.shade700
+                          : Colors.grey.shade600),
+                  child: prog.completed
+                      ? const Icon(LucideIcons.check, size: 16)
+                      : (isCurrent
+                          ? const Icon(LucideIcons.play, size: 16)
+                          : Text('${index + 1}')),
+                ),
+                title: Text(
+                  lesson.title,
+                  style: TextStyle(
+                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
+                    fontSize: 14,
+                    color: isCurrent ? const Color(0xFF0D9488) : null,
                   ),
                 ),
+                subtitle: Row(
+                  children: [
+                    Text(
+                      '${lesson.durationMinutes} mins',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.5),
+                      ),
+                    ),
+                    if (isDownloaded) ...[
+                      const SizedBox(width: 8),
+                      const Icon(
+                        LucideIcons.hardDrive,
+                        size: 12,
+                        color: Color(0xFF0F766E),
+                      ),
+                      const SizedBox(width: 3),
+                      const Text(
+                        'Offline',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF0F766E),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                trailing: isCurrent
+                    ? const Icon(
+                        LucideIcons.volume2,
+                        color: Color(0xFF0D9488),
+                        size: 18,
+                      )
+                    : null,
+                onTap: () => _onLessonSelect(lesson, progressList),
               );
             },
           ),

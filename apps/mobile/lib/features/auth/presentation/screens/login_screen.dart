@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/compass_logo.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -61,6 +62,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    const Center(
+                      child: CompassBrandHeader(
+                        iconSize: 36,
+                        fontSize: 26,
+                        animated: true,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                     const Text(
                       'Welcome back',
                       textAlign: TextAlign.center,
@@ -127,17 +136,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   _passwordController.text = 'Sid@1234567';
                                   _login();
                                 },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14,),
                             child: Row(
                               children: [
-                                const Text('⚡', style: TextStyle(fontSize: 22)),
-                                const SizedBox(width: 12),
+                                Text('⚡', style: TextStyle(fontSize: 22)),
+                                SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: const [
+                                    children: [
                                       Text(
                                         'Instant Demo Login (1-Click)',
                                         style: TextStyle(
@@ -156,8 +165,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     ],
                                   ),
                                 ),
-                                const Icon(Icons.arrow_forward_ios,
-                                    color: Colors.white, size: 16),
+                                Icon(Icons.arrow_forward_ios,
+                                    color: Colors.white, size: 16,),
                               ],
                             ),
                           ),

@@ -571,7 +571,7 @@ class _SchemeQuestionnaireScreenState
                 ),
                 if (isSelected)
                   const Icon(LucideIcons.checkCircle,
-                      color: Colors.green, size: 20),
+                      color: Colors.green, size: 20,),
               ],
             ),
           ),
@@ -645,7 +645,7 @@ class _SchemeQuestionnaireScreenState
                 ),
                 if (isSelected)
                   const Icon(LucideIcons.checkCircle,
-                      color: Colors.green, size: 20),
+                      color: Colors.green, size: 20,),
               ],
             ),
           ),
@@ -670,7 +670,7 @@ class _SchemeQuestionnaireScreenState
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),),
               ),
               onPressed: () => setState(() => _currentStep--),
               child: const Text('Back'),
@@ -684,7 +684,7 @@ class _SchemeQuestionnaireScreenState
               backgroundColor: Colors.green.shade700,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),),
               elevation: 2,
             ),
             onPressed: _canProceed() ? _onNext : null,

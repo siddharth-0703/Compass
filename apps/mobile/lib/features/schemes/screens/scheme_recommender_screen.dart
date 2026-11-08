@@ -86,7 +86,7 @@ class _SchemeRecommenderScreenState
         data: (list) {
           final verified = list
               .where((item) =>
-                  item['source'] == 'VERIFIED' || item['source'] == null)
+                  item['source'] == 'VERIFIED' || item['source'] == null,)
               .toList();
           final aiDiscovered =
               list.where((item) => item['source'] == 'AI_DISCOVERED').toList();
@@ -153,13 +153,13 @@ class _SchemeRecommenderScreenState
                                   context.push('/schemes/questionnaire'),
                               style: OutlinedButton.styleFrom(
                                 side: BorderSide(
-                                    color: Colors.green.shade700, width: 1.5),
+                                    color: Colors.green.shade700, width: 1.5,),
                                 foregroundColor: Colors.green.shade800,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 10),
+                                    horizontal: 14, vertical: 10,),
                               ),
                               child: const Text(
                                 'Refine Profile',
@@ -179,12 +179,12 @@ class _SchemeRecommenderScreenState
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
+                                  horizontal: 10, vertical: 4,),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFE8F5E9),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                    color: Colors.green.shade300, width: 1),
+                                    color: Colors.green.shade300, width: 1,),
                               ),
                               child: Text(
                                 '\u2713 Verified \u2014 officially confirmed schemes',
@@ -197,12 +197,12 @@ class _SchemeRecommenderScreenState
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
+                                  horizontal: 10, vertical: 4,),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF3E8FF),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                    color: Colors.purple.shade200, width: 1),
+                                    color: Colors.purple.shade200, width: 1,),
                               ),
                               child: Text(
                                 '\u2728 AI Discovered \u2014 pending verification',
@@ -227,7 +227,7 @@ class _SchemeRecommenderScreenState
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 8.0),
+                          horizontal: 20.0, vertical: 8.0,),
                       child: Row(
                         children: [
                           const Text(
@@ -241,7 +241,7 @@ class _SchemeRecommenderScreenState
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                                horizontal: 8, vertical: 2,),
                             decoration: BoxDecoration(
                               color: Colors.green.shade100,
                               borderRadius: BorderRadius.circular(12),
@@ -265,7 +265,7 @@ class _SchemeRecommenderScreenState
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           return _buildSchemeCard(
-                              context, ref, verified[index], isVerified: true);
+                              context, ref, verified[index], isVerified: true,);
                         },
                         childCount: verified.length,
                       ),
@@ -291,7 +291,7 @@ class _SchemeRecommenderScreenState
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                                horizontal: 8, vertical: 2,),
                             decoration: BoxDecoration(
                               color: Colors.purple.shade100,
                               borderRadius: BorderRadius.circular(12),
@@ -316,7 +316,7 @@ class _SchemeRecommenderScreenState
                         (context, index) {
                           return _buildSchemeCard(
                               context, ref, aiDiscovered[index],
-                              isVerified: false);
+                              isVerified: false,);
                         },
                         childCount: aiDiscovered.length,
                       ),
@@ -428,11 +428,11 @@ class _SchemeRecommenderScreenState
                 if (isVerified)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                        horizontal: 8, vertical: 3,),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8F5E9),
                       border: Border.all(
-                          color: Colors.green.shade300, width: 1),
+                          color: Colors.green.shade300, width: 1,),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -447,11 +447,11 @@ class _SchemeRecommenderScreenState
                 else
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                        horizontal: 8, vertical: 3,),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF3E8FF),
                       border: Border.all(
-                          color: Colors.purple.shade200, width: 1),
+                          color: Colors.purple.shade200, width: 1,),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -547,7 +547,7 @@ class _SchemeRecommenderScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Icon(LucideIcons.sparkles,
-                        size: 15, color: Colors.purple),
+                        size: 15, color: Colors.purple,),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -685,7 +685,7 @@ class _SchemeRecommenderScreenState
                   final uri = Uri.parse(officialUrl);
                   if (await canLaunchUrl(uri)) {
                     await launchUrl(uri,
-                        mode: LaunchMode.externalApplication);
+                        mode: LaunchMode.externalApplication,);
                   }
                 },
                 child: Padding(
@@ -694,7 +694,7 @@ class _SchemeRecommenderScreenState
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Icon(LucideIcons.externalLink,
-                          size: 14, color: Colors.blue),
+                          size: 14, color: Colors.blue,),
                       const SizedBox(width: 6),
                       Text(
                         'Apply on official government portal',
@@ -773,7 +773,7 @@ class _SchemeRecommenderScreenState
                       const Text(
                         'AI Recommendation Insight',
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 18, fontWeight: FontWeight.bold,),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close),

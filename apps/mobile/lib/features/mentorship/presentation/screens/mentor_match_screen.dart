@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../providers/mentorship_providers.dart';
 import '../../domain/entities/mentor_match.dart';
+import '../../../../core/localization/locale_provider.dart';
 
 class MentorMatchScreen extends ConsumerStatefulWidget {
   const MentorMatchScreen({super.key});
@@ -20,17 +21,18 @@ class _MentorMatchScreenState extends ConsumerState<MentorMatchScreen> {
   Widget build(BuildContext context) {
     // Pass mock business ID in accordance with the rest of the application
     final matchState = ref.watch(mentorMatchingProvider('mock-business-id'));
+    final strings = ref.watch(appStringsProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Connect with Mentors', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(strings.mentorship, style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.calendarDays),
-            tooltip: 'My Sessions',
+            tooltip: strings.isHindi ? 'मेरे सत्र' : (strings.isMarathi ? 'माझे सत्र' : 'My Sessions'),
             onPressed: () => context.push('/mentors/sessions'),
           ),
         ],

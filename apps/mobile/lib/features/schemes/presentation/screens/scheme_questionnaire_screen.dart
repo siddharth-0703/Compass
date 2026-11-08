@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../providers/scheme_recommendation_provider.dart';
+import '../../../../core/localization/locale_provider.dart';
+import '../../../../core/localization/app_strings.dart';
 
 class SchemeQuestionnaireScreen extends ConsumerStatefulWidget {
   const SchemeQuestionnaireScreen({super.key});
@@ -72,20 +74,20 @@ class _SchemeQuestionnaireScreenState
     }
   }
 
-  String _getStepTitle() {
+  String _getStepTitle(AppStrings strings) {
     switch (_currentStep) {
       case 1:
-        return 'Primary Activity';
+        return strings.primaryActivity;
       case 2:
-        return 'State';
+        return strings.state;
       case 3:
-        return 'Annual Income';
+        return strings.annualIncome;
       case 4:
-        return 'Age Group';
+        return strings.ageGroup;
       case 5:
-        return 'Gender';
+        return strings.gender;
       case 6:
-        return 'Social Category';
+        return strings.socialCategory;
       default:
         return '';
     }
@@ -143,6 +145,8 @@ class _SchemeQuestionnaireScreenState
 
   @override
   Widget build(BuildContext context) {
+    final strings = ref.watch(appStringsProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -152,9 +156,9 @@ class _SchemeQuestionnaireScreenState
           icon: const Icon(Icons.close, color: Colors.black87),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Find Your Schemes',
-          style: TextStyle(
+        title: Text(
+          strings.findYourSchemes,
+          style: const TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -168,7 +172,7 @@ class _SchemeQuestionnaireScreenState
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Text(
-                  'Step $_currentStep of $_totalSteps \u2014 ${_getStepTitle()}',
+                  '${strings.stepOf} $_currentStep / $_totalSteps \u2014 ${_getStepTitle(strings)}',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -196,7 +200,7 @@ class _SchemeQuestionnaireScreenState
                 child: _buildCurrentStepContent(),
               ),
             ),
-            _buildBottomNav(),
+            _buildBottomNav(strings),
           ],
         ),
       ),
@@ -654,7 +658,7 @@ class _SchemeQuestionnaireScreenState
     );
   }
 
-  Widget _buildBottomNav() {
+  Widget _buildBottomNav(AppStrings strings) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -673,7 +677,7 @@ class _SchemeQuestionnaireScreenState
                     borderRadius: BorderRadius.circular(12),),
               ),
               onPressed: () => setState(() => _currentStep--),
-              child: const Text('Back'),
+              child: Text(strings.previous),
             )
           else
             const SizedBox.shrink(),
@@ -689,7 +693,7 @@ class _SchemeQuestionnaireScreenState
             ),
             onPressed: _canProceed() ? _onNext : null,
             child: Text(
-              _currentStep < _totalSteps ? 'Continue' : 'Find My Schemes \u2192',
+              _currentStep < _totalSteps ? strings.next : '${strings.findMySchemes} \u2192',
               style:
                   const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),

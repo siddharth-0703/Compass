@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/locale_provider.dart';
 
-class UserManagementScreen extends StatefulWidget {
+class UserManagementScreen extends ConsumerStatefulWidget {
   const UserManagementScreen({super.key});
 
   @override
-  State<UserManagementScreen> createState() => _UserManagementScreenState();
+  ConsumerState<UserManagementScreen> createState() => _UserManagementScreenState();
 }
 
-class _UserManagementScreenState extends State<UserManagementScreen> {
+class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   String _selectedRole = 'All';
 
   final List<Map<String, dynamic>> _users = [
@@ -60,14 +62,15 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = ref.watch(appStringsProvider);
     final filtered = _selectedRole == 'All'
         ? _users
         : _users.where((u) => u['role'] == _selectedRole).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('User Management',
-            style: TextStyle(fontWeight: FontWeight.bold),),
+        title: Text(strings.isHindi ? 'उपयोगकर्ता प्रबंधन' : (strings.isMarathi ? 'वापरकर्ता व्यवस्थापन' : 'User Management'),
+            style: const TextStyle(fontWeight: FontWeight.bold),),
       ),
       body: Column(
         children: [

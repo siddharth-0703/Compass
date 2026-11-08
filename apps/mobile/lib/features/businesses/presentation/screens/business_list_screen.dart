@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/business_provider.dart';
+import '../../../../core/localization/locale_provider.dart';
 
 class BusinessListScreen extends ConsumerWidget {
   const BusinessListScreen({super.key});
@@ -9,15 +10,16 @@ class BusinessListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final businessesAsyncValue = ref.watch(myBusinessesProvider);
+    final strings = ref.watch(appStringsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Businesses',
-            style: TextStyle(fontWeight: FontWeight.bold),),
+        title: Text(strings.myBusinesses,
+            style: const TextStyle(fontWeight: FontWeight.bold),),
         actions: [
           IconButton(
             icon: const Icon(Icons.add_business_outlined),
-            tooltip: 'Register New Business',
+            tooltip: strings.registerNewBusiness,
             onPressed: () => context.push('/businesses/new'),
           ),
         ],
@@ -25,7 +27,7 @@ class BusinessListScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/businesses/new'),
         icon: const Icon(Icons.add),
-        label: const Text('Register Business'),
+        label: Text(strings.registerBusiness),
       ),
       body: businessesAsyncValue.when(
         data: (businesses) {
@@ -42,7 +44,7 @@ class BusinessListScreen extends ConsumerWidget {
                           .withValues(alpha: 0.5),),
                   const SizedBox(height: 16),
                   Text(
-                    'No businesses found',
+                    strings.noBusinessesFound,
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -50,7 +52,7 @@ class BusinessListScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Get started by registering your first business.',
+                    strings.startByRegistering,
                     style: TextStyle(
                         color: Theme.of(context)
                             .colorScheme
@@ -60,7 +62,7 @@ class BusinessListScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () => context.push('/businesses/new'),
-                    child: const Text('Register Business'),
+                    child: Text(strings.registerBusiness),
                   ),
                 ],
               ),

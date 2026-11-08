@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../../core/localization/locale_provider.dart';
 
-class ContentModerationScreen extends StatefulWidget {
+class ContentModerationScreen extends ConsumerStatefulWidget {
   const ContentModerationScreen({super.key});
 
   @override
-  State<ContentModerationScreen> createState() =>
+  ConsumerState<ContentModerationScreen> createState() =>
       _ContentModerationScreenState();
 }
 
-class _ContentModerationScreenState extends State<ContentModerationScreen> {
+class _ContentModerationScreenState extends ConsumerState<ContentModerationScreen> {
   String _activeTab = 'All';
 
   final List<Map<String, dynamic>> _items = [
@@ -77,14 +79,15 @@ class _ContentModerationScreenState extends State<ContentModerationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = ref.watch(appStringsProvider);
     final filtered = _activeTab == 'All'
         ? _items
         : _items.where((i) => i['status'] == _activeTab).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Content Moderation',
-            style: TextStyle(fontWeight: FontWeight.bold),),
+        title: Text(strings.isHindi ? 'एआई सामग्री मॉडरेशन' : (strings.isMarathi ? 'एआय सामग्री नियंत्रण' : 'AI Content Moderation'),
+            style: const TextStyle(fontWeight: FontWeight.bold),),
       ),
       body: Column(
         children: [

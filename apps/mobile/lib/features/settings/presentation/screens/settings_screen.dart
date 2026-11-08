@@ -4,18 +4,19 @@ import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../../core/localization/locale_provider.dart';
+import '../../../../core/localization/app_strings.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
-  String _getThemeTitle(ThemeMode mode) {
+  String _getThemeTitle(ThemeMode mode, AppStrings strings) {
     switch (mode) {
       case ThemeMode.system:
-        return 'System default';
+        return strings.systemDefault;
       case ThemeMode.light:
-        return 'Light theme';
+        return strings.lightTheme;
       case ThemeMode.dark:
-        return 'Dark theme';
+        return strings.darkTheme;
     }
   }
 
@@ -190,7 +191,7 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.dark_mode_outlined),
             title: Text(strings.appearance),
-            subtitle: Text(_getThemeTitle(currentThemeMode)),
+            subtitle: Text(_getThemeTitle(currentThemeMode, strings)),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               showModalBottomSheet(
@@ -229,7 +230,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                         ListTile(
                           leading: const Icon(Icons.light_mode),
-                          title: const Text('Light theme'),
+                          title: Text(strings.lightTheme),
                           trailing: currentThemeMode == ThemeMode.light
                               ? const Icon(Icons.check, color: Colors.green)
                               : null,
@@ -242,7 +243,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                         ListTile(
                           leading: const Icon(Icons.dark_mode),
-                          title: const Text('Dark theme'),
+                          title: Text(strings.darkTheme),
                           trailing: currentThemeMode == ThemeMode.dark
                               ? const Icon(Icons.check, color: Colors.green)
                               : null,

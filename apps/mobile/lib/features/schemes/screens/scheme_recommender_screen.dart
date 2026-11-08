@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../businesses/presentation/providers/business_provider.dart';
 import '../../businesses/data/models/business_model.dart';
 import '../presentation/providers/scheme_recommendation_provider.dart';
+import '../../../../core/localization/locale_provider.dart';
 
 class SchemeRecommenderScreen extends ConsumerStatefulWidget {
   const SchemeRecommenderScreen({super.key});
@@ -44,6 +45,7 @@ class _SchemeRecommenderScreenState
     final recommendationsState = ref.watch(schemeRecommendationProvider);
     final savedProfile = ref.watch(activeQuestionnaireProfileProvider);
     final businessesState = ref.watch(myBusinessesProvider);
+    final strings = ref.watch(appStringsProvider);
 
     final activeBusiness = businessesState.value?.isNotEmpty == true
         ? businessesState.value!.first
@@ -63,21 +65,21 @@ class _SchemeRecommenderScreenState
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAF7),
       appBar: AppBar(
-        title: const Text(
-          'Government Schemes',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        title: Text(
+          strings.governmentSchemes,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.business_outlined),
-            tooltip: 'My Businesses',
+            tooltip: strings.myBusinesses,
             onPressed: () => context.push('/businesses'),
           ),
           IconButton(
             icon: const Icon(LucideIcons.fileQuestion),
-            tooltip: 'Find Your Schemes',
+            tooltip: strings.findYourSchemes,
             onPressed: () => context.push('/schemes/questionnaire'),
           ),
         ],
@@ -128,7 +130,7 @@ class _SchemeRecommenderScreenState
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '$totalCount Schemes Found For You',
+                                    '$totalCount ${strings.schemesFoundForYou}',
                                     style: const TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
@@ -137,7 +139,7 @@ class _SchemeRecommenderScreenState
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Based on your profile: $activity \u00B7 $stateName \u00B7 $category',
+                                    '${strings.basedOnYourProfile}: $activity \u00B7 $stateName \u00B7 $category',
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: Colors.grey.shade600,
@@ -161,9 +163,9 @@ class _SchemeRecommenderScreenState
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 14, vertical: 10,),
                               ),
-                              child: const Text(
-                                'Refine Profile',
-                                style: TextStyle(
+                              child: Text(
+                                strings.refineProfile,
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 13,
                                 ),
@@ -187,7 +189,7 @@ class _SchemeRecommenderScreenState
                                     color: Colors.green.shade300, width: 1,),
                               ),
                               child: Text(
-                                '\u2713 Verified \u2014 officially confirmed schemes',
+                                strings.verifiedPill,
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -205,7 +207,7 @@ class _SchemeRecommenderScreenState
                                     color: Colors.purple.shade200, width: 1,),
                               ),
                               child: Text(
-                                '\u2728 AI Discovered \u2014 pending verification',
+                                strings.aiDiscoveredPill,
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -219,6 +221,32 @@ class _SchemeRecommenderScreenState
                     ),
                   ),
                 ),
+
+                if (totalCount == 0)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(LucideIcons.search, size: 48, color: Colors.purple),
+                            const SizedBox(height: 16),
+                            Text(
+                              strings.noMatchingSchemes,
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              strings.tryAdjustingProfile,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
 
                 const SliverToBoxAdapter(child: SizedBox(height: 12)),
 

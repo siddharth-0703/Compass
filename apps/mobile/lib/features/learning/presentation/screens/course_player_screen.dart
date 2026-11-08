@@ -10,6 +10,7 @@ import '../../domain/entities/lesson_progress.dart';
 import '../../data/services/video_stream_resolver.dart';
 import '../../../../core/download/providers/download_provider.dart';
 import '../../../../core/download/models/download_task.dart';
+import '../../../../core/localization/locale_provider.dart';
 
 class CoursePlayerScreen extends ConsumerStatefulWidget {
   final String courseId;
@@ -49,6 +50,10 @@ class _CoursePlayerScreenState extends ConsumerState<CoursePlayerScreen> {
   @override
   void initState() {
     super.initState();
+    final savedLang = ref.read(appLocaleProvider);
+    if (savedLang == 'hi' || savedLang == 'mr' || savedLang == 'en') {
+      _activeLanguage = savedLang;
+    }
     _startSyncTimer();
   }
 

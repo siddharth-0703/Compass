@@ -80,7 +80,7 @@ class HeroBanner extends ConsumerWidget {
                       Icon(LucideIcons.sparkles, size: 14, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 6),
                       Text(
-                        'AI BUSINESS COMMAND CENTER',
+                        strings.aiCommandCenter,
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -95,7 +95,7 @@ class HeroBanner extends ConsumerWidget {
                 
                 // Welcome Text
                 Text(
-                  'Welcome back,',
+                  '${strings.welcomeBack},',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
@@ -133,7 +133,7 @@ class HeroBanner extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Today's AI Recommendation",
+                              strings.todayAiRecommendation,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -142,7 +142,7 @@ class HeroBanner extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '"Organic millet demand is increasing in Maharashtra. Based on your profile, consider increasing your inventory. 3 new Government Schemes also match your business."',
+                              strings.aiRecommendationText,
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
@@ -175,7 +175,7 @@ class HeroBanner extends ConsumerWidget {
                         strings.weather,
                         weather.temperature,
                         Colors.orange,
-                        subtitle: weather.condition,
+                        subtitle: weather.condition.isNotEmpty ? strings.weatherCondition(weather.condition) : null,
                       ),
                     ),
                     const SizedBox(width: 12),

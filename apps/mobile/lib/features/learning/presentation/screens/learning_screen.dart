@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/learning_provider.dart';
+import '../../../../core/localization/locale_provider.dart';
+import '../../../../core/localization/app_strings.dart';
 
 class LearningScreen extends ConsumerStatefulWidget {
   const LearningScreen({super.key});
@@ -26,9 +28,33 @@ class _LearningScreenState extends ConsumerState<LearningScreen> {
     'Women Entrepreneurs',
   ];
 
+  String _getCategoryLabel(String cat, AppStrings strings) {
+    switch (cat) {
+      case 'All':
+        return strings.all;
+      case 'Agriculture':
+        return strings.agriculture;
+      case 'Digital Skills':
+        return strings.digitalSkills;
+      case 'Financial Literacy':
+        return strings.financialLiteracy;
+      case 'Government Schemes':
+        return strings.schemes;
+      case 'Entrepreneurship':
+        return strings.entrepreneurship;
+      case 'Economy':
+        return strings.economy;
+      case 'Women Entrepreneurs':
+        return strings.womenEntrepreneurs;
+      default:
+        return cat;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final learningState = ref.watch(learningNotifierProvider);
+    final strings = ref.watch(appStringsProvider);
 
     if (learningState.isLoading && learningState.resources.isEmpty) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -46,8 +72,8 @@ class _LearningScreenState extends ConsumerState<LearningScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Learning Hub',
-            style: TextStyle(fontWeight: FontWeight.bold),),
+        title: Text(strings.learningHub,
+            style: const TextStyle(fontWeight: FontWeight.bold),),
         elevation: 0,
       ),
       body: Column(
@@ -56,7 +82,7 @@ class _LearningScreenState extends ConsumerState<LearningScreen> {
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Search offline courses...',
+                hintText: strings.searchOfflineCourses,
                 prefixIcon: const Icon(Icons.search),
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -79,7 +105,7 @@ class _LearningScreenState extends ConsumerState<LearningScreen> {
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: ChoiceChip(
-                    label: Text(category),
+                    label: Text(_getCategoryLabel(category, strings)),
                     selected: isSelected,
                     onSelected: (selected) {
                       if (selected) {
@@ -94,7 +120,7 @@ class _LearningScreenState extends ConsumerState<LearningScreen> {
           const SizedBox(height: 8),
           Expanded(
             child: filteredResources.isEmpty
-                ? const Center(child: Text('No courses found.'))
+                ? Center(child: Text(strings.noCoursesFound))
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: filteredResources.length,

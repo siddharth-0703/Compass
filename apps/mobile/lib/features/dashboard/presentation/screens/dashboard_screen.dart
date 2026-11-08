@@ -33,7 +33,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final strings = ref.watch(appStringsProvider);
 
     final List<Widget> screens = [
-      _buildHomeTab(context, authState),
+      _buildHomeTab(context, authState, strings),
       const BusinessListScreen(),
       const LearningScreen(),
       const SchemeRecommenderScreen(),
@@ -380,7 +380,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildHomeTab(BuildContext context, dynamic authState) {
+  Widget _buildHomeTab(BuildContext context, dynamic authState, AppStrings strings) {
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: () async {
@@ -403,7 +403,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Business Health',
+                strings.businessHealth,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -416,25 +416,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   clipBehavior: Clip.none,
-                  children: const [
+                  children: [
                     MetricCard(
-                      title: 'Active Businesses',
+                      title: strings.activeBusinesses,
                       value: '1',
-                      trend: 'vs last month',
+                      trend: strings.vsLastMonth,
                       trendValue: 0.0,
                       icon: LucideIcons.building2,
                     ),
                     MetricCard(
-                      title: 'Community Members',
+                      title: strings.communityMembers,
                       value: '12',
-                      trend: 'vs last month',
+                      trend: strings.vsLastMonth,
                       trendValue: 12.5,
                       icon: LucideIcons.users,
                     ),
                     MetricCard(
-                      title: 'Learning Hours',
+                      title: strings.learningHours,
                       value: '4.5',
-                      trend: 'vs last week',
+                      trend: strings.vsLastWeek,
                       trendValue: 5.2,
                       icon: LucideIcons.graduationCap,
                     ),

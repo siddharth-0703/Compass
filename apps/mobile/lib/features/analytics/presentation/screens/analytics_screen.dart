@@ -1,87 +1,102 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../../core/localization/locale_provider.dart';
 
-class AnalyticsScreen extends StatefulWidget {
+class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
 
   @override
-  State<AnalyticsScreen> createState() => _AnalyticsScreenState();
+  ConsumerState<AnalyticsScreen> createState() => _AnalyticsScreenState();
 }
 
-class _AnalyticsScreenState extends State<AnalyticsScreen> {
-  String _selectedRange = '6 Months';
-
-  final List<Map<String, dynamic>> _kpis = [
-    {
-      'title': 'Marketplace Volume',
-      'value': '₹42.8 Lakh',
-      'trend': '+18.4% YoY',
-      'icon': LucideIcons.dollarSign,
-      'color': Colors.green,
-    },
-    {
-      'title': 'Active Entrepreneurs',
-      'value': '1,842',
-      'trend': '+124 new',
-      'icon': LucideIcons.users,
-      'color': Colors.blue,
-    },
-    {
-      'title': 'Scheme Success Rate',
-      'value': '84.2%',
-      'trend': '567 sanctioned',
-      'icon': LucideIcons.award,
-      'color': Colors.purple,
-    },
-    {
-      'title': 'Mandi Price Premium',
-      'value': '+14.2%',
-      'trend': 'Above MSP',
-      'icon': LucideIcons.trendingUp,
-      'color': Colors.amber,
-    },
-  ];
-
-  final List<Map<String, dynamic>> _sectorBreakdown = [
-    {'name': 'Agri-Processing', 'pct': 38, 'color': const Color(0xFF10b981)},
-    {'name': 'Dairy & Livestock', 'pct': 26, 'color': const Color(0xFF3b82f6)},
-    {'name': 'Handicrafts & Handlooms', 'pct': 18, 'color': const Color(0xFF8b5cf6)},
-    {'name': 'Food & Spices', 'pct': 12, 'color': const Color(0xFFf59e0b)},
-    {'name': 'Rural Renewable Tech', 'pct': 6, 'color': const Color(0xFF06b6d4)},
-  ];
-
-  final List<Map<String, dynamic>> _stateStats = [
-    {'state': 'Maharashtra', 'units': 684, 'disbursed': '₹48.2 L', 'growth': '+22%'},
-    {'state': 'Madhya Pradesh', 'units': 412, 'disbursed': '₹29.6 L', 'growth': '+18%'},
-    {'state': 'Gujarat', 'units': 326, 'disbursed': '₹24.1 L', 'growth': '+14%'},
-    {'state': 'Karnataka', 'units': 248, 'disbursed': '₹18.5 L', 'growth': '+11%'},
-    {'state': 'Uttar Pradesh', 'units': 172, 'disbursed': '₹12.8 L', 'growth': '+9%'},
-  ];
+class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
+  String _selectedRangeKey = '6m';
 
   @override
   Widget build(BuildContext context) {
+    final strings = ref.watch(appStringsProvider);
+
+    final rangeOptions = [
+      {'key': '30d', 'label': strings.range30Days},
+      {'key': '3m', 'label': strings.range3Months},
+      {'key': '6m', 'label': strings.range6Months},
+      {'key': '1y', 'label': strings.range1Year},
+    ];
+
+    final currentRangeLabel = rangeOptions.firstWhere(
+      (r) => r['key'] == _selectedRangeKey,
+      orElse: () => rangeOptions[2],
+    )['label']!;
+
+    final kpis = [
+      {
+        'title': strings.marketplaceVolume,
+        'value': '₹42.8 Lakh',
+        'trend': strings.yoyGrowth,
+        'icon': LucideIcons.dollarSign,
+        'color': Colors.green,
+      },
+      {
+        'title': strings.activeEntrepreneurs,
+        'value': '1,842',
+        'trend': strings.newEntrepreneurs,
+        'icon': LucideIcons.users,
+        'color': Colors.blue,
+      },
+      {
+        'title': strings.schemeSuccessRate,
+        'value': '84.2%',
+        'trend': strings.sanctionedCount,
+        'icon': LucideIcons.award,
+        'color': Colors.purple,
+      },
+      {
+        'title': strings.mandiPricePremium,
+        'value': '+14.2%',
+        'trend': strings.aboveMsp,
+        'icon': LucideIcons.trendingUp,
+        'color': Colors.amber,
+      },
+    ];
+
+    final sectorBreakdown = [
+      {'name': strings.agriProcessing, 'pct': 38, 'color': const Color(0xFF10b981)},
+      {'name': strings.dairyLivestock, 'pct': 26, 'color': const Color(0xFF3b82f6)},
+      {'name': strings.handicrafts, 'pct': 18, 'color': const Color(0xFF8b5cf6)},
+      {'name': strings.foodSpices, 'pct': 12, 'color': const Color(0xFFf59e0b)},
+      {'name': strings.renewableTech, 'pct': 6, 'color': const Color(0xFF06b6d4)},
+    ];
+
+    final stateStats = [
+      {'state': 'Maharashtra', 'units': 684, 'disbursed': '₹48.2 L', 'growth': '+22%'},
+      {'state': 'Madhya Pradesh', 'units': 412, 'disbursed': '₹29.6 L', 'growth': '+18%'},
+      {'state': 'Gujarat', 'units': 326, 'disbursed': '₹24.1 L', 'growth': '+14%'},
+      {'state': 'Karnataka', 'units': 248, 'disbursed': '₹18.5 L', 'growth': '+11%'},
+      {'state': 'Uttar Pradesh', 'units': 172, 'disbursed': '₹12.8 L', 'growth': '+9%'},
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Platform Analytics',
-            style: TextStyle(fontWeight: FontWeight.bold),),
+        title: Text(
+          strings.platformAnalytics,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           PopupMenuButton<String>(
-            initialValue: _selectedRange,
-            onSelected: (val) => setState(() => _selectedRange = val),
-            itemBuilder: (context) => [
-              '30 Days',
-              '3 Months',
-              '6 Months',
-              '1 Year',
-            ]
-                .map((r) => PopupMenuItem(value: r, child: Text(r)))
+            initialValue: _selectedRangeKey,
+            onSelected: (val) => setState(() => _selectedRangeKey = val),
+            itemBuilder: (context) => rangeOptions
+                .map((r) => PopupMenuItem(value: r['key'], child: Text(r['label']!)))
                 .toList(),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  Text(_selectedRange,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),),
+                  Text(
+                    currentRangeLabel,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
                   const Icon(Icons.arrow_drop_down),
                 ],
               ),
@@ -96,14 +111,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           children: [
             // Header summary
             Text(
-              'Ecosystem Metrics',
+              strings.ecosystemMetrics,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Real-time overview of rural entrepreneur adoption & subsidies.',
+              strings.ecosystemSubtitle,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 fontSize: 13,
@@ -121,13 +136,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 mainAxisSpacing: 12,
                 childAspectRatio: 1.35,
               ),
-              itemCount: _kpis.length,
+              itemCount: kpis.length,
               itemBuilder: (context, index) {
-                final kpi = _kpis[index];
-                final color = kpi['color'] as MaterialColor;
+                final kpi = kpis[index];
+                final color = kpi['color'] as Color;
                 return Card(
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(14.0),
                     child: Column(
@@ -137,22 +153,26 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              kpi['title'],
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withValues(alpha: 0.6),
+                            Expanded(
+                              child: Text(
+                                kpi['title'] as String,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.6),
+                                ),
                               ),
                             ),
-                            Icon(kpi['icon'], size: 16, color: color),
+                            Icon(kpi['icon'] as IconData, size: 16, color: color),
                           ],
                         ),
                         Text(
-                          kpi['value'],
+                          kpi['value'] as String,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -160,17 +180,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2,),
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: color.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            kpi['trend'],
+                            kpi['trend'] as String,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: color.shade800,
+                              color: color,
                             ),
                           ),
                         ),
@@ -186,19 +208,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             // Sector Breakdown Card
             Card(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),),
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Enterprises by Industry Sector',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    Text(
+                      strings.enterprisesBySector,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
-                    ..._sectorBreakdown.map((sector) {
+                    ...sectorBreakdown.map((sector) {
                       final pct = sector['pct'] as int;
                       final color = sector['color'] as Color;
                       return Padding(
@@ -221,18 +243,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      sector['name'],
+                                      sector['name'] as String,
                                       style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ],
                                 ),
                                 Text(
                                   '$pct%',
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
                                 ),
                               ],
                             ),
@@ -242,10 +266,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               child: LinearProgressIndicator(
                                 value: pct / 100,
                                 minHeight: 6,
-                                backgroundColor:
-                                    color.withValues(alpha: 0.15),
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(color),
+                                backgroundColor: color.withValues(alpha: 0.15),
+                                valueColor: AlwaysStoppedAnimation<Color>(color),
                               ),
                             ),
                           ],
@@ -262,20 +284,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             // Top Performing States Table Card
             Card(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),),
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Top Performing States',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    Text(
+                      strings.topPerformingStates,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Regional subsidy flow & micro-business density',
+                      strings.topStatesSubtitle,
                       style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context)
@@ -285,7 +307,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ..._stateStats.map((st) {
+                    ...stateStats.map((st) {
                       return Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
@@ -304,31 +326,43 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(st['state'],
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,),),
-                                Text('${st['units']} active units',
-                                    style: TextStyle(
-                                        fontSize: 11,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withValues(alpha: 0.6),),),
+                                Text(
+                                  st['state'] as String,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                Text(
+                                  '${st['units']} ${strings.activeUnits}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.6),
+                                  ),
+                                ),
                               ],
                             ),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text(st['disbursed'],
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,),),
-                                Text(st['growth'],
-                                    style: const TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.bold,),),
+                                Text(
+                                  st['disbursed'] as String,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                Text(
+                                  st['growth'] as String,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
@@ -345,4 +379,3 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 }
-

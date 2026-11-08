@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../businesses/presentation/providers/business_provider.dart';
 import '../../../schemes/presentation/providers/scheme_recommendation_provider.dart';
+import '../../../../core/localization/locale_provider.dart';
 import 'dart:convert';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -183,19 +184,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         .take(2)
         .join('');
 
+    final strings = ref.watch(appStringsProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAF7),
       appBar: AppBar(
-        title: const Text(
-          'My Profile',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        title: Text(
+          strings.profile,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.pencil, size: 20),
-            tooltip: 'Edit Profile',
+            tooltip: strings.isHindi ? 'प्रोफ़ाइल संपादित करें' : (strings.isMarathi ? 'प्रोफाइल संपादित करा' : 'Edit Profile'),
             onPressed: () => _showEditProfileDialog(context, ref),
           ),
         ],

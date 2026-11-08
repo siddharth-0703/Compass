@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../../core/localization/locale_provider.dart';
 
-class ObservabilityScreen extends StatefulWidget {
+class ObservabilityScreen extends ConsumerStatefulWidget {
   const ObservabilityScreen({super.key});
 
   @override
-  State<ObservabilityScreen> createState() => _ObservabilityScreenState();
+  ConsumerState<ObservabilityScreen> createState() => _ObservabilityScreenState();
 }
 
-class _ObservabilityScreenState extends State<ObservabilityScreen> {
+class _ObservabilityScreenState extends ConsumerState<ObservabilityScreen> {
   bool _isRefreshing = false;
   String _lastChecked = 'Just now';
 
@@ -63,10 +65,12 @@ class _ObservabilityScreenState extends State<ObservabilityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = ref.watch(appStringsProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Platform Observability',
-            style: TextStyle(fontWeight: FontWeight.bold),),
+        title: Text(strings.isHindi ? 'सिस्टम प्रेक्षणीयता' : (strings.isMarathi ? 'प्रणाली निरीक्षण' : 'Platform Observability'),
+            style: const TextStyle(fontWeight: FontWeight.bold),),
         actions: [
           IconButton(
             icon: Icon(LucideIcons.refreshCw,

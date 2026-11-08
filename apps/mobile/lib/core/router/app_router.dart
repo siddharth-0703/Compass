@@ -25,6 +25,7 @@ import '../../features/observability/presentation/screens/observability_screen.d
 import '../../features/moderation/presentation/screens/content_moderation_screen.dart';
 import '../../features/users/presentation/screens/user_management_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
+import '../../features/ai/presentation/screens/ai_chat_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -158,6 +159,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/mentors/sessions',
         name: 'my_sessions',
         builder: (context, state) => const MySessionsScreen(),
+      ),
+      GoRoute(
+        path: '/ai/chat',
+        name: 'ai_chat',
+        builder: (context, state) => const AiChatScreen(),
       ),
     ],
     redirect: (context, state) {

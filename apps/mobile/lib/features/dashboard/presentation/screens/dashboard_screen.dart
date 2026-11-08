@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../core/notifications/services/notification_service.dart';
-import '../../../shared/presentation/widgets/voice_assistant_overlay.dart';
 
 // Import screens for the bottom navigation
 import '../../../learning/presentation/screens/learning_screen.dart';
@@ -121,10 +120,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       floatingActionButton: _currentIndex == 0 
         ? FloatingActionButton.extended(
-            icon: const Icon(LucideIcons.mic, color: Colors.white),
-            label: const Text('Voice Assistant', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            icon: const Icon(LucideIcons.sparkles, color: Colors.white),
+            label: Text(strings.talkToAi, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
             backgroundColor: Theme.of(context).colorScheme.primary,
-            onPressed: () => VoiceAssistantOverlay.show(context),
+            onPressed: () => context.push('/ai/chat'),
           )
         : null,
     );
@@ -237,6 +236,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   const SizedBox(height: 16),
 
                   _buildDrawerGroup(strings.aiContent),
+                  _buildDrawerItem(
+                    icon: LucideIcons.sparkles,
+                    title: strings.talkToAi,
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/ai/chat');
+                    },
+                    selected: false,
+                  ),
                   _buildDrawerItem(
                     icon: LucideIcons.shieldCheck,
                     title: 'Moderation',

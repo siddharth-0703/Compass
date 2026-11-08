@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/localization/locale_provider.dart';
 
-class QuickActions extends StatelessWidget {
+class QuickActions extends ConsumerWidget {
   final Function(int) onTabSelected;
 
   const QuickActions({super.key, required this.onTabSelected});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final strings = ref.watch(appStringsProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Actions',
+          strings.quickActions,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -31,37 +35,31 @@ class QuickActions extends StatelessWidget {
           children: [
             _buildActionCard(
               context,
-              title: 'Register Business',
+              title: strings.registerNewBusiness,
               icon: LucideIcons.building2,
               color: Colors.teal,
-              onTap: () => context.push('/businesses/new'), // Assume router handles this
+              onTap: () => context.push('/businesses/new'),
             ),
             _buildActionCard(
               context,
-              title: 'Apply Scheme',
+              title: strings.exploreSchemes,
               icon: LucideIcons.heartHandshake,
               color: Colors.blue,
               onTap: () => onTabSelected(3), // Navigate to Schemes tab
             ),
             _buildActionCard(
               context,
-              title: 'Start Learning',
+              title: strings.startLearning,
               icon: LucideIcons.graduationCap,
               color: Colors.purple,
               onTap: () => onTabSelected(2), // Navigate to Learning tab
             ),
             _buildActionCard(
               context,
-              title: 'Talk to AI',
+              title: strings.talkToAi,
               icon: LucideIcons.sparkles,
               color: Theme.of(context).colorScheme.primary,
-              onTap: () {
-                // Should trigger voice overlay, perhaps using a global key or provider,
-                // For now, we can just show a snackbar or call a callback.
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Tap the FAB to Talk to AI')),
-                );
-              },
+              onTap: () => context.push('/ai/chat'),
             ),
           ],
         ),
@@ -84,26 +82,30 @@ class QuickActions extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+          border: Border.all(
+            color: color.withValues(alpha: 0.2),
+            width: 1.5,
+          ),
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+                color: color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(height: 8),
             Text(
               title,
-              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),

@@ -69,6 +69,7 @@ class AppStrings {
 
   // General
   String get search => isHindi ? 'खोजें...' : (isMarathi ? 'शोधा...' : 'Search...');
+  String get talkToAi => isHindi ? 'एआई से बात करें' : (isMarathi ? 'एआयशी बोला' : 'Talk to AI');
   String get cancel => isHindi ? 'रद्द करें' : (isMarathi ? 'रद्द करा' : 'Cancel');
   String get save => isHindi ? 'सहेजें' : (isMarathi ? 'जतन करा' : 'Save');
   String get apply => isHindi ? 'लागू करें' : (isMarathi ? 'लागू करा' : 'Apply');

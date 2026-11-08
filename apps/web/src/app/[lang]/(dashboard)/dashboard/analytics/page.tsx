@@ -30,6 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useDictionary } from "@/components/providers/DictionaryProvider";
 
 const REVENUE_DATA = [
   { month: "Jan", volume: 18.5, businesses: 420 },
@@ -66,15 +67,19 @@ const REGIONAL_STATS = [
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState("6m");
+  const { dict } = useDictionary();
+  const t = dict.analytics || {};
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-7xl mx-auto w-full">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Platform Analytics</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            {t.title || "Platform Analytics"}
+          </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Ecosystem growth, financial disbursement, scheme adoption, and sector benchmarks.
+            {t.subtitle || "Ecosystem growth, financial disbursement, scheme adoption, and sector benchmarks."}
           </p>
         </div>
 
@@ -82,19 +87,19 @@ export default function AnalyticsPage() {
           <Select value={timeRange} onValueChange={(val) => { if (val) setTimeRange(val); }}>
             <SelectTrigger className="w-36 h-9 text-xs">
               <Calendar className="mr-2 h-3.5 w-3.5" />
-              <SelectValue placeholder="Period" />
+              <SelectValue placeholder={t.period || "Period"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1m">Last 30 Days</SelectItem>
-              <SelectItem value="3m">Last 3 Months</SelectItem>
-              <SelectItem value="6m">Last 6 Months</SelectItem>
-              <SelectItem value="1y">Year to Date</SelectItem>
+              <SelectItem value="1m">{t.last30Days || "Last 30 Days"}</SelectItem>
+              <SelectItem value="3m">{t.last3Months || "Last 3 Months"}</SelectItem>
+              <SelectItem value="6m">{t.last6Months || "Last 6 Months"}</SelectItem>
+              <SelectItem value="1y">{t.yearToDate || "Year to Date"}</SelectItem>
             </SelectContent>
           </Select>
 
           <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5">
             <Download className="h-3.5 w-3.5" />
-            Export Report
+            {t.exportReport || "Export Report"}
           </Button>
         </div>
       </div>
@@ -103,56 +108,64 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Marketplace Volume</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t.marketplaceVolume || "Marketplace Volume"}
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">₹42.8 Lakh</div>
             <div className="flex items-center text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
               <ArrowUpRight className="h-3.5 w-3.5 mr-0.5" />
-              +18.4% from last period
+              +18.4% {t.fromLastPeriod || "from last period"}
             </div>
           </CardContent>
         </Card>
 
         <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Entrepreneurs</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t.activeEntrepreneurs || "Active Entrepreneurs"}
+            </CardTitle>
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">1,842</div>
             <div className="flex items-center text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
               <ArrowUpRight className="h-3.5 w-3.5 mr-0.5" />
-              +124 newly registered
+              +124 {t.newlyRegistered || "newly registered"}
             </div>
           </CardContent>
         </Card>
 
         <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Scheme Success Rate</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t.schemeSuccessRate || "Scheme Success Rate"}
+            </CardTitle>
             <Award className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">84.2%</div>
             <div className="flex items-center text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
               <ArrowUpRight className="h-3.5 w-3.5 mr-0.5" />
-              567 subsidies sanctioned
+              567 {t.subsidiesSanctioned || "subsidies sanctioned"}
             </div>
           </CardContent>
         </Card>
 
         <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Avg. Mandi Premium</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t.avgMandiPremium || "Avg. Mandi Premium"}
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">+14.2%</div>
             <div className="flex items-center text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
               <ArrowUpRight className="h-3.5 w-3.5 mr-0.5" />
-              Above local wholesale MSP
+              {t.aboveMsp || "Above local wholesale MSP"}
             </div>
           </CardContent>
         </Card>
@@ -163,8 +176,12 @@ export default function AnalyticsPage() {
         {/* Growth Trends */}
         <Card className="lg:col-span-4 border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Growth & Platform Adoption</CardTitle>
-            <CardDescription>Monthly transaction volume (₹ Lakh) and registered businesses</CardDescription>
+            <CardTitle className="text-base font-semibold">
+              {t.growthTitle || "Growth & Platform Adoption"}
+            </CardTitle>
+            <CardDescription>
+              {t.growthDesc || "Monthly transaction volume (₹ Lakh) and registered businesses"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -195,8 +212,12 @@ export default function AnalyticsPage() {
         {/* Sector Breakdown */}
         <Card className="lg:col-span-3 border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Enterprises by Sector</CardTitle>
-            <CardDescription>Distribution of rural businesses on the platform</CardDescription>
+            <CardTitle className="text-base font-semibold">
+              {t.sectorTitle || "Enterprises by Sector"}
+            </CardTitle>
+            <CardDescription>
+              {t.sectorDesc || "Distribution of rural businesses on the platform"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-72 flex flex-col justify-center">
             <ResponsiveContainer width="100%" height="70%">
@@ -213,7 +234,9 @@ export default function AnalyticsPage() {
               {SECTOR_DATA.map((item) => (
                 <div key={item.name} className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="text-muted-foreground truncate">{item.name}</span>
+                  <span className="text-muted-foreground truncate">
+                    {t.sectors?.[item.name] || item.name}
+                  </span>
                   <span className="font-semibold text-foreground ml-auto">{item.value}%</span>
                 </div>
               ))}
@@ -227,14 +250,24 @@ export default function AnalyticsPage() {
         {/* Scheme Application Performance */}
         <Card className="lg:col-span-4 border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Government Scheme Applications</CardTitle>
-            <CardDescription>Applications submitted vs. successfully sanctioned</CardDescription>
+            <CardTitle className="text-base font-semibold">
+              {t.schemeAppTitle || "Government Scheme Applications"}
+            </CardTitle>
+            <CardDescription>
+              {t.schemeAppDesc || "Applications submitted vs. successfully sanctioned"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={SCHEME_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                <XAxis dataKey="name" stroke="#888888" fontSize={11} tickLine={false} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#888888" 
+                  fontSize={11} 
+                  tickLine={false}
+                  tickFormatter={(val) => (typeof val === 'string' && t.schemes?.[val]) ? t.schemes[val] : String(val)}
+                />
                 <YAxis stroke="#888888" fontSize={12} tickLine={false} />
                 <Tooltip
                   contentStyle={{
@@ -243,10 +276,15 @@ export default function AnalyticsPage() {
                     borderRadius: "8px",
                     color: "#fff",
                   }}
+                  formatter={(val, name) => [val, name === "applied" ? (t.submitted || "Submitted") : (t.sanctioned || "Sanctioned")]}
+                  labelFormatter={(lbl) => (typeof lbl === 'string' && t.schemes?.[lbl]) ? t.schemes[lbl] : String(lbl)}
                 />
-                <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
-                <Bar dataKey="applied" name="Submitted" fill="#94a3b8" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="approved" name="Sanctioned" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <Legend 
+                  wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} 
+                  formatter={(value) => value === "applied" ? (t.submitted || "Submitted") : (t.sanctioned || "Sanctioned")}
+                />
+                <Bar dataKey="applied" name="applied" fill="#94a3b8" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="approved" name="approved" fill="#10b981" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -255,19 +293,29 @@ export default function AnalyticsPage() {
         {/* Regional Activity Table */}
         <Card className="lg:col-span-3 border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm flex flex-col justify-between">
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Top Performing States</CardTitle>
-            <CardDescription>Regional entrepreneurship uptake & subsidy flow</CardDescription>
+            <CardTitle className="text-base font-semibold">
+              {t.topStatesTitle || "Top Performing States"}
+            </CardTitle>
+            <CardDescription>
+              {t.topStatesDesc || "Regional entrepreneurship uptake & subsidy flow"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {REGIONAL_STATS.map((stat) => (
               <div key={stat.state} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 border border-border/30">
                 <div>
-                  <div className="font-semibold text-foreground text-sm">{stat.state}</div>
-                  <div className="text-xs text-muted-foreground">{stat.enterprises} Active Units</div>
+                  <div className="font-semibold text-foreground text-sm">
+                    {t.states?.[stat.state] || stat.state}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {stat.enterprises} {t.activeUnits || "Active Units"}
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold text-sm text-foreground">{stat.disbursement}</div>
-                  <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">{stat.growth} YoY</div>
+                  <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                    {stat.growth} {t.yoy || "YoY"}
+                  </div>
                 </div>
               </div>
             ))}

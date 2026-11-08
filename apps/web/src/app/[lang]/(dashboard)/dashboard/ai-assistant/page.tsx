@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Mic, MicOff, Send, Volume2, VolumeX, ShieldAlert, Sparkles, Navigation, Search, Check, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
+import { useDictionary } from "@/components/providers/DictionaryProvider"
 
 interface Message {
   id: string
@@ -19,10 +20,12 @@ type AssistantState = "idle" | "listening" | "processing" | "confirming" | "exec
 
 export default function AIAssistantPage() {
   const router = useRouter()
+  const { dict, lang } = useDictionary()
+  const t = dict.aiAssistant || {}
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
-      text: "Hello! I am your AI Assistant. You can speak or type to navigate schemes, learning modules, or connect with mentors. What would you like to do?",
+      text: t.welcome || "Hello! I am your AI Assistant. You can speak or type to navigate schemes, learning modules, or connect with mentors. What would you like to do?",
       sender: "assistant",
       timestamp: new Date()
     }
@@ -255,7 +258,7 @@ export default function AIAssistantPage() {
         if (action === "SEARCH" && searchQuery) {
           route += `?search=${encodeURIComponent(searchQuery)}`
         }
-        router.push(route)
+        router.push(`/${lang}${route}`)
       }, 1500)
     }
   }
@@ -286,9 +289,11 @@ export default function AIAssistantPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-            AI Voice Assistant
+            {t.title || "AI Voice Assistant"}
           </h1>
-          <p className="text-sm text-muted-foreground">Ask to open schemes, search courses, or match mentors.</p>
+          <p className="text-sm text-muted-foreground">
+            {t.subtitle || "Ask to open schemes, search courses, or match mentors."}
+          </p>
         </div>
         <button
           onClick={() => setIsMuted(!isMuted)}

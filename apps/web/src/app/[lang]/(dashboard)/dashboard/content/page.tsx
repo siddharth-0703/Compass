@@ -5,6 +5,7 @@ import { ShieldAlert, ShieldCheck, CheckCircle2, XCircle, AlertTriangle, Eye, Fi
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useDictionary } from "@/components/providers/DictionaryProvider";
 
 interface ModerationItem {
   id: string;
@@ -66,6 +67,9 @@ const INITIAL_QUEUE: ModerationItem[] = [
 ];
 
 export default function ContentModerationPage() {
+  const { dict } = useDictionary();
+  const t = dict.moderation || {};
+
   const [items, setItems] = useState<ModerationItem[]>(INITIAL_QUEUE);
   const [filter, setFilter] = useState<"All" | "Pending" | "Approved" | "Rejected">("All");
 
@@ -86,20 +90,39 @@ export default function ContentModerationPage() {
     return item.status === filter;
   });
 
+  const getFilterLabel = (tab: "All" | "Pending" | "Approved" | "Rejected") => {
+    switch (tab) {
+      case "All": return t.all || "All";
+      case "Pending": return t.pending || "Pending";
+      case "Approved": return t.approved || "Approved";
+      case "Rejected": return t.rejected || "Rejected";
+    }
+  };
+
+  const getStatusLabel = (status: "Pending" | "Approved" | "Rejected") => {
+    switch (status) {
+      case "Pending": return t.pending || "Pending";
+      case "Approved": return t.approved || "Approved";
+      case "Rejected": return t.rejected || "Rejected";
+    }
+  };
+
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-7xl mx-auto w-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">AI Content Moderation</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              {t.title || dict.navigation?.moderation || "AI Content Moderation"}
+            </h1>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
               <Sparkles className="h-3.5 w-3.5" />
-              Automated Safety Engine
+              {t.safetyEngine || "Automated Safety Engine"}
             </span>
           </div>
           <p className="text-muted-foreground text-sm mt-1">
-            Review community discussions, marketplace listings, and AI-flagged enterprise content.
+            {t.description || "Review community discussions, marketplace listings, and AI-flagged enterprise content."}
           </p>
         </div>
 
@@ -115,7 +138,7 @@ export default function ContentModerationPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {tab}
+              {getFilterLabel(tab)}
             </button>
           ))}
         </div>
@@ -125,45 +148,61 @@ export default function ContentModerationPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Scanned Items</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t.scannedItems || "Scanned Items"}
+            </CardTitle>
             <MessageSquare className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">1,420</div>
-            <p className="text-xs text-muted-foreground mt-1">Real-time NLP stream</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t.realtimeStream || "Real-time NLP stream"}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">AI Flagged</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t.aiFlagged || "AI Flagged"}
+            </CardTitle>
             <AlertTriangle className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">18 items</div>
-            <p className="text-xs text-muted-foreground mt-1">Requires human review</p>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">18</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t.requiresReview || "Requires human review"}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Clean Score</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t.cleanScore || "Clean Score"}
+            </CardTitle>
             <ShieldCheck className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">98.7%</div>
-            <p className="text-xs text-muted-foreground mt-1">Community trust index</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t.trustIndex || "Community trust index"}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Model Accuracy</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t.modelAccuracy || "Model Accuracy"}
+            </CardTitle>
             <Sparkles className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">99.4%</div>
-            <p className="text-xs text-muted-foreground mt-1">Gemini Safety Benchmark</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t.geminiBenchmark || "Gemini Safety Benchmark"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -171,13 +210,17 @@ export default function ContentModerationPage() {
       {/* Moderation Review Feed */}
       <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base font-semibold">Moderation Queue</CardTitle>
-          <CardDescription>Items flagged by the sentiment, policy, and scam prevention classifiers</CardDescription>
+          <CardTitle className="text-base font-semibold">
+            {t.queueTitle || "Moderation Queue"}
+          </CardTitle>
+          <CardDescription>
+            {t.queueDesc || "Items flagged by the sentiment, policy, and scam prevention classifiers"}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {filteredItems.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground text-sm">
-              No items matching the selected filter.
+              {t.noItems || "No items matching the selected filter."}
             </div>
           ) : (
             filteredItems.map((item) => (
@@ -203,7 +246,7 @@ export default function ContentModerationPage() {
                           : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
                       }`}
                     >
-                      {item.status}
+                      {getStatusLabel(item.status)}
                     </span>
                   </div>
 
@@ -233,7 +276,7 @@ export default function ContentModerationPage() {
                         onClick={() => handleApprove(item.id)}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        Approve
+                        {t.approve || "Approve"}
                       </Button>
                       <Button
                         size="sm"
@@ -242,7 +285,7 @@ export default function ContentModerationPage() {
                         onClick={() => handleReject(item.id)}
                       >
                         <XCircle className="h-3.5 w-3.5" />
-                        Reject
+                        {t.reject || "Reject"}
                       </Button>
                     </>
                   ) : (

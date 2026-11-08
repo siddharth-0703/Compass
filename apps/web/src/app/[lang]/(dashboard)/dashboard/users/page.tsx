@@ -5,8 +5,12 @@ import { useUsers } from "@/features/users/queries/use-users"
 import { columns, UserRow } from "@/features/users/components/columns"
 import { DataTable } from "@/shared/components/data-table/DataTable"
 import { DataTablePagination } from "@/shared/components/data-table/DataTablePagination"
+import { useDictionary } from "@/components/providers/DictionaryProvider"
 
 export default function UsersPage() {
+  const { dict } = useDictionary()
+  const t = dict.usersManagement || {}
+
   const [pagination, setPagination] = useState({
     pageIndex: 0, // 0-based for TanStack Table
     pageSize: 20,
@@ -23,9 +27,14 @@ export default function UsersPage() {
   const pageCount = data?.data?.pagination?.totalPages || -1
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Users</h2>
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 max-w-7xl mx-auto w-full">
+      <div className="flex flex-col space-y-1 mb-2">
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">
+          {t.title || dict.navigation?.users || "Users"}
+        </h2>
+        <p className="text-muted-foreground text-sm">
+          {t.description || "Manage platform members, rural entrepreneurs, mentors, and administrators."}
+        </p>
       </div>
       
       <div className="space-y-4">

@@ -5,6 +5,7 @@ import axios from 'axios';
 import { Activity, Server, Database, Cpu, Wifi, CheckCircle2, RefreshCw, Zap, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useDictionary } from '@/components/providers/DictionaryProvider';
 
 interface HealthMetrics {
   status: string;
@@ -37,6 +38,9 @@ const DEFAULT_METRICS: HealthMetrics = {
 };
 
 export default function ObservabilityDashboard() {
+  const { dict } = useDictionary();
+  const t = dict.observability || {};
+
   const [metrics, setMetrics] = useState<HealthMetrics>(DEFAULT_METRICS);
   const [loading, setLoading] = useState(false);
   const [lastChecked, setLastChecked] = useState<string>('Just now');
@@ -82,19 +86,23 @@ export default function ObservabilityDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Platform Observability</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              {t.title || dict.navigation?.observability || "Platform Observability"}
+            </h1>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Live Telemetry
+              {t.liveTelemetry || "Live Telemetry"}
             </span>
           </div>
           <p className="text-muted-foreground text-sm mt-1">
-            Real-time infrastructure health, microservices status, and AI engine diagnostics.
+            {t.description || "Real-time infrastructure health, microservices status, and AI engine diagnostics."}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">Updated: {lastChecked}</span>
+          <span className="text-xs text-muted-foreground">
+            {t.updated || "Updated"}: {lastChecked}
+          </span>
           <Button
             variant="outline"
             size="sm"
@@ -103,7 +111,7 @@ export default function ObservabilityDashboard() {
             className="flex items-center gap-1.5 text-xs h-9"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
+            {t.refresh || "Refresh"}
           </Button>
         </div>
       </div>
@@ -112,13 +120,15 @@ export default function ObservabilityDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">System Health</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t.systemHealth || "System Health"}
+            </CardTitle>
             <ShieldCheck className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
               <CheckCircle2 className="h-6 w-6" />
-              {metrics.status || 'Healthy'}
+              {metrics.status === 'Healthy' ? (t.healthy || 'Healthy') : metrics.status}
             </div>
             <p className="text-xs text-muted-foreground mt-1">99.98% availability SLA</p>
           </CardContent>
@@ -126,7 +136,9 @@ export default function ObservabilityDashboard() {
 
         <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Platform Uptime</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t.platformUptime || "Platform Uptime"}
+            </CardTitle>
             <Activity className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
@@ -139,20 +151,26 @@ export default function ObservabilityDashboard() {
 
         <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Sync Conflicts</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t.activeSyncConflicts || "Active Sync Conflicts"}
+            </CardTitle>
             <Wifi className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
               {metrics.metrics.activeSyncConflicts || 0}
             </div>
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">✓ Offline-first sync clear</p>
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+              {t.offlineSyncClear || "✓ Offline-first sync clear"}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">AI Latency (Avg)</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t.aiLatency || "AI Latency (Avg)"}
+            </CardTitle>
             <Zap className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
@@ -166,31 +184,37 @@ export default function ObservabilityDashboard() {
 
       {/* Subsystem Health Cards */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground tracking-tight">Subsystem Diagnostics</h2>
+        <h2 className="text-lg font-semibold text-foreground tracking-tight">
+          {t.subsystemDiagnostics || "Subsystem Diagnostics"}
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <ServiceStatusCard
-            title="Core API Gateway"
+            title={t.coreApiGateway || "Core API Gateway"}
             status={metrics.services.api}
             description="REST & GraphQL endpoints"
             icon={<Server className="h-5 w-5 text-teal-500" />}
+            healthyLabel={t.healthy || 'Healthy'}
           />
           <ServiceStatusCard
-            title="Database Cluster"
+            title={t.databaseCluster || "Database Cluster"}
             status={metrics.services.database}
             description="MongoDB Atlas primary replica"
             icon={<Database className="h-5 w-5 text-blue-500" />}
+            healthyLabel={t.healthy || 'Healthy'}
           />
           <ServiceStatusCard
-            title="Redis Queue & Cache"
+            title={t.redisQueue || "Redis Queue & Cache"}
             status={metrics.services.redis}
             description="In-memory cache & rate limiter"
             icon={<Cpu className="h-5 w-5 text-purple-500" />}
+            healthyLabel={t.healthy || 'Healthy'}
           />
           <ServiceStatusCard
-            title="Gemini AI Engine"
+            title={t.aiEngine || "Gemini AI Engine"}
             status={metrics.services.ai}
             description="Natural language advisor"
             icon={<Zap className="h-5 w-5 text-amber-500" />}
+            healthyLabel={t.operational || 'Operational'}
           />
         </div>
       </div>
@@ -198,8 +222,12 @@ export default function ObservabilityDashboard() {
       {/* Live System Diagnostics Feed */}
       <Card className="border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base font-semibold">Active Monitoring Audit Log</CardTitle>
-          <CardDescription>Automated health checks performed every 15 seconds across microservices</CardDescription>
+          <CardTitle className="text-base font-semibold">
+            {t.monitoringAuditLog || "Active Monitoring Audit Log"}
+          </CardTitle>
+          <CardDescription>
+            {t.monitoringDesc || "Automated health checks performed every 15 seconds across microservices"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3 font-mono text-xs">
@@ -239,11 +267,13 @@ function ServiceStatusCard({
   status,
   description,
   icon,
+  healthyLabel,
 }: {
   title: string;
   status: string;
   description: string;
   icon: React.ReactNode;
+  healthyLabel?: string;
 }) {
   const isHealthy = status?.toLowerCase() === 'healthy' || status?.toLowerCase() === 'operational';
 
@@ -259,7 +289,7 @@ function ServiceStatusCard({
                 : 'bg-destructive/10 text-destructive border border-destructive/20'
             }`}
           >
-            {status || 'Healthy'}
+            {isHealthy && healthyLabel ? healthyLabel : (status || 'Healthy')}
           </span>
         </div>
         <div>

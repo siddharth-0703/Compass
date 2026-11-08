@@ -52,7 +52,16 @@
     "statusVerified": "Your business is verified and active.",
     "statusPending": "Your business is currently awaiting verification.",
     "statusRejected": "Your business registration requires attention.",
-    "statusDraft": "Your business is in draft mode."
+    "statusDraft": "Your business is in draft mode.",
+    "manageBusinesses": "Manage and track all your registered businesses",
+    "totalBusinesses": "Total Businesses",
+    "pendingVerification": "Pending Verification",
+    "verifiedAndActive": "Verified & Active",
+    "searchPlaceholder": "Search businesses...",
+    "noBusinessesFound": "No businesses found",
+    "noBusinessesPrompt": "You haven't registered any businesses yet. Register your first business to get started.",
+    "adjustSearchPrompt": "Try adjusting your search filters to find what you're looking for.",
+    "registerBusiness": "Register Business"
   },
   "common": {
     "compassTitle": "Compass",
@@ -68,7 +77,9 @@
     "overview": "Overview",
     "management": "Management",
     "system": "System",
-    "aiAndContent": "AI & Content"
+    "aiAndContent": "AI & Content",
+    "androidApp": "Android App",
+    "getStarted": "Get Started"
   },
   "navigation": {
     "home": "Home",
@@ -79,7 +90,12 @@
     "support": "Support",
     "profile": "Profile",
     "mandi": "Market Prices",
-    "mentor": "Mentorship"
+    "mentor": "Mentorship",
+    "dashboard": "Dashboard",
+    "analytics": "Analytics",
+    "users": "Users",
+    "moderation": "Moderation",
+    "observability": "Observability"
   },
   "marketing": {
     "heroTitle": "Empowering Rural Entrepreneurship",
@@ -96,7 +112,6 @@
     "activeBusinesses": "Active Businesses",
     "communityMembers": "Community Members",
     "learningHours": "Learning Hours",
-    
     "aiCommandCenter": "AI Business Command Center",
     "todaysRecommendation": "Today's AI Recommendation",
     "aiInsightText": "\"Organic millet demand is increasing in Maharashtra. Based on your profile, consider increasing your inventory. 3 new Government Schemes also match your business.\"",
@@ -108,12 +123,10 @@
     "weatherDesc": "Ideal for harvesting",
     "schemeMatches": "Scheme Matches",
     "applyByFriday": "Apply by Friday",
-    
     "registerBusiness": "Register Business",
     "applyScheme": "Apply Scheme",
     "startLearning": "Start Learning",
     "talkToAi": "Talk to AI",
-    
     "fromLastMonth": "from last month",
     "fromLastWeek": "from last week",
     "newHoursLogged": "new hours logged"
@@ -375,7 +388,25 @@
           "minority": "⚪ Minority"
         }
       }
-    }
+    },
+    "backToSchemes": "Back to Schemes",
+    "verifiedRecommendation": "Verified Recommendation",
+    "aiDiscoveredUnverified": "AI Discovered (Unverified)",
+    "personalisedMatch": "Personalised Match",
+    "matchedRequirements": "Matched Requirements",
+    "unmetRequirements": "Unmet / Missing Information",
+    "overview": "Overview",
+    "whoIsThisFor": "Who Is This For?",
+    "saveForLater": "Save Scheme for Later",
+    "savedToProfile": "✓ Saved to your profile",
+    "benefits": "Benefits",
+    "eligibilityCriteria": "Eligibility Criteria",
+    "requiredDocuments": "Required Documents",
+    "howToApply": "How to Apply",
+    "applyPortal": "Apply on Official Portal",
+    "viewOfficial": "View Official Scheme Page",
+    "disclaimer": "Important: Always verify eligibility and application details on the official government portal before applying.",
+    "redirectNotice": "You will be redirected to the official government portal. We do not collect applications."
   },
   "learningHub": {
     "pageTitle": "Learning Hub",
@@ -433,5 +464,117 @@
     "otp": "OTP",
     "sendOtp": "Send OTP",
     "verifyOtp": "Verify OTP"
+  },
+  "analytics": {
+    "title": "Platform Analytics",
+    "subtitle": "Ecosystem growth, financial disbursement, scheme adoption, and sector benchmarks.",
+    "period": "Period",
+    "exportReport": "Export Report",
+    "last30Days": "Last 30 Days",
+    "last3Months": "Last 3 Months",
+    "last6Months": "Last 6 Months",
+    "yearToDate": "Year to Date",
+    "marketplaceVolume": "Marketplace Volume",
+    "fromLastPeriod": "from last period",
+    "activeEntrepreneurs": "Active Entrepreneurs",
+    "newlyRegistered": "newly registered",
+    "schemeSuccessRate": "Scheme Success Rate",
+    "subsidiesSanctioned": "subsidies sanctioned",
+    "avgMandiPremium": "Avg. Mandi Premium",
+    "aboveMsp": "Above local wholesale MSP",
+    "growthTitle": "Growth & Platform Adoption",
+    "growthDesc": "Monthly transaction volume (₹ Lakh) and registered businesses",
+    "sectorTitle": "Enterprises by Sector",
+    "sectorDesc": "Distribution of rural businesses on the platform",
+    "schemeAppTitle": "Government Scheme Applications",
+    "schemeAppDesc": "Applications submitted vs. successfully sanctioned",
+    "submitted": "Submitted",
+    "sanctioned": "Sanctioned",
+    "topStatesTitle": "Top Performing States",
+    "topStatesDesc": "Regional entrepreneurship uptake & subsidy flow",
+    "activeUnits": "Active Units",
+    "yoy": "YoY",
+    "sectors": {
+      "Agri-Processing": "Agri-Processing",
+      "Dairy & Livestock": "Dairy & Livestock",
+      "Handicrafts & Handloom": "Handicrafts & Handloom",
+      "Food & Spices": "Food & Spices",
+      "Renewable & Rural Tech": "Renewable & Rural Tech"
+    },
+    "states": {
+      "Maharashtra": "Maharashtra",
+      "Madhya Pradesh": "Madhya Pradesh",
+      "Gujarat": "Gujarat",
+      "Karnataka": "Karnataka",
+      "Uttar Pradesh": "Uttar Pradesh"
+    },
+    "schemes": {
+      "PM-KMY Pension": "PM-KMY Pension",
+      "PMMY Mudra Shishu": "PMMY Mudra Shishu",
+      "NABARD Rural Agri": "NABARD Rural Agri",
+      "Stand-Up India SC/ST": "Stand-Up India SC/ST",
+      "PM Formalisation (FME)": "PM Formalisation (FME)"
+    }
+  },
+  "usersManagement": {
+    "title": "Users",
+    "description": "Manage platform members, rural entrepreneurs, mentors, and administrators.",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "phone": "Phone",
+    "email": "Email",
+    "role": "Role",
+    "joined": "Joined"
+  },
+  "moderation": {
+    "title": "AI Content Moderation",
+    "safetyEngine": "Automated Safety Engine",
+    "description": "Review community discussions, marketplace listings, and AI-flagged enterprise content.",
+    "all": "All",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "scannedItems": "Scanned Items",
+    "realtimeStream": "Real-time NLP stream",
+    "aiFlagged": "AI Flagged",
+    "requiresReview": "Requires human review",
+    "cleanScore": "Clean Score",
+    "trustIndex": "Community trust index",
+    "modelAccuracy": "Model Accuracy",
+    "geminiBenchmark": "Gemini Safety Benchmark",
+    "queueTitle": "Moderation Queue",
+    "queueDesc": "Items flagged by the sentiment, policy, and scam prevention classifiers",
+    "noItems": "No items matching the selected filter.",
+    "approve": "Approve",
+    "reject": "Reject"
+  },
+  "observability": {
+    "title": "Platform Observability",
+    "liveTelemetry": "Live Telemetry",
+    "description": "Real-time infrastructure health, microservices status, and AI engine diagnostics.",
+    "updated": "Updated",
+    "refresh": "Refresh",
+    "systemHealth": "System Health",
+    "platformUptime": "Platform Uptime",
+    "activeSyncConflicts": "Active Sync Conflicts",
+    "offlineSyncClear": "✓ Offline-first sync clear",
+    "aiLatency": "AI Latency (Avg)",
+    "subsystemDiagnostics": "Subsystem Diagnostics",
+    "monitoringAuditLog": "Active Monitoring Audit Log",
+    "monitoringDesc": "Automated health checks performed every 15 seconds across microservices",
+    "coreApiGateway": "Core API Gateway",
+    "databaseCluster": "Database Cluster",
+    "redisQueue": "Redis Queue & Cache",
+    "aiEngine": "Gemini AI Engine",
+    "healthy": "Healthy",
+    "operational": "Operational"
+  },
+  "aiAssistant": {
+    "title": "AI Voice Assistant",
+    "subtitle": "Ask to open schemes, search courses, or match mentors.",
+    "welcome": "Hello! I am your AI Assistant. You can speak or type to navigate schemes, learning modules, or connect with mentors. What would you like to do?",
+    "listening": "Listening...",
+    "tapToSpeak": "Tap to speak...",
+    "askAnything": "Ask anything or type a command..."
   }
 }

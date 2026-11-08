@@ -1,7 +1,13 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/providers/DictionaryProvider"
 
 export function HeroSection() {
+  const { dict, lang } = useDictionary()
+  const m = dict.marketing || {}
+
   return (
     <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
       {/* Background imagery / AI pattern */}
@@ -24,22 +30,22 @@ export function HeroSection() {
             </div>
             
             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 max-w-4xl leading-tight">
-              Empowering Rural Entrepreneurs with <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">AI</span>
+              {m.heroTitle || "Empowering Rural Entrepreneurs with AI"}
             </h1>
             
             <p className="text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed">
-              Helping businesses access mentorship, marketplaces, government schemes, and learning resources through an intelligent, unified platform.
+              {m.heroDescription || "Helping businesses access mentorship, marketplaces, government schemes, and learning resources through an intelligent, unified platform."}
             </p>
             
             <div className="flex flex-col sm:flex-row items-center gap-4">
-              <Link href="/signup">
+              <Link href={`/${lang}/signup`}>
                 <Button size="lg" className="w-full sm:w-auto text-lg h-14 px-8 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-primary/25 transition-all">
-                  Start Your Journey
+                  {m.getStarted || dict.common?.getStarted || "Start Your Journey"}
                 </Button>
               </Link>
-              <Link href="#features">
+              <Link href={`/${lang}#features`}>
                 <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg h-14 px-8 border-white/10 bg-white/5 hover:bg-white/10 backdrop-blur-md transition-all">
-                  Explore Platform
+                  {m.learnMore || "Explore Platform"}
                 </Button>
               </Link>
             </div>

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useAuthStore } from "@/features/auth/stores/auth.store"
+import { useDictionary } from "@/components/providers/DictionaryProvider"
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/
 
@@ -33,6 +34,7 @@ const formSchema = z.object({
 
 export default function SignupPage() {
   const router = useRouter()
+  const { dict, lang } = useDictionary()
   const setUser = useAuthStore((state) => state.setUser)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -65,7 +67,7 @@ export default function SignupPage() {
       
       if (response.data.success) {
         setUser(response.data.data.user)
-        router.push("/dashboard")
+        router.push(`/${lang}/dashboard`)
         router.refresh()
       }
     } catch (err: any) {
@@ -104,7 +106,7 @@ export default function SignupPage() {
             <h2 className="text-3xl font-extrabold text-foreground mb-2">Create your account</h2>
             <p className="text-muted-foreground text-lg">
               Already have an account?{" "}
-              <Link href="/login" className="text-primary hover:underline font-semibold">
+              <Link href={`/${lang}/login`} className="text-primary hover:underline font-semibold">
                 Sign in
               </Link>
             </p>

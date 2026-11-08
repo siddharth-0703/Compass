@@ -109,7 +109,7 @@ export default function LoginPage() {
             <h2 className="text-3xl font-extrabold text-foreground mb-2">Welcome back</h2>
             <p className="text-muted-foreground text-lg">
               Don't have an account?{" "}
-              <Link href="/signup" className="text-primary hover:underline font-semibold">
+              <Link href={`/${lang}/signup`} className="text-primary hover:underline font-semibold">
                 Sign up
               </Link>
             </p>

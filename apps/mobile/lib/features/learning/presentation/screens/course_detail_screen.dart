@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/learning_provider.dart';
+import '../../data/services/video_stream_resolver.dart';
 import '../../../../core/download/providers/download_provider.dart';
 import '../../../../core/download/models/download_task.dart';
+import '../../../../core/localization/locale_provider.dart';
 
 class CourseDetailScreen extends ConsumerStatefulWidget {
   final String courseId;
@@ -15,21 +18,46 @@ class CourseDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
-  void _handleDownloadAction(String courseId, DownloadTask? task) {
-    if (task == null ||
-        task.state == DownloadState.failed ||
-        task.state == DownloadState.cancelled) {
-      ref.read(downloadTasksProvider.notifier).enqueue(
-            courseId,
-            'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
-            'course_$courseId.mp4',
-            1048576,
-          );
-    } else if (task.state == DownloadState.downloading ||
-        task.state == DownloadState.queued) {
-      ref.read(downloadTasksProvider.notifier).pause(courseId);
-    } else if (task.state == DownloadState.paused) {
-      ref.read(downloadTasksProvider.notifier).resume(courseId);
+  Future<void> _handleDownloadAction(String courseId) async {
+    final learningState = ref.read(learningNotifierProvider);
+    final course = learningState.resources.firstWhere(
+      (r) => r.id == courseId,
+      orElse: () => learningState.resources.first,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Downloading course lessons for zero-data offline playback...'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    final lang = ref.read(appLocaleProvider);
+    for (final mod in course.modules) {
+      for (final lesson in mod.lessons) {
+        final media = lesson.media;
+        String? mediaUrl;
+        if (lang == 'hi') {
+          mediaUrl = media?.hi?.contentUrl;
+        } else if (lang == 'mr') {
+          mediaUrl = media?.mr?.contentUrl;
+        } else {
+          mediaUrl = media?.en?.contentUrl;
+        }
+        mediaUrl ??= media?.en?.contentUrl ?? media?.hi?.contentUrl ?? media?.mr?.contentUrl ?? 'https://www.youtube.com/watch?v=pDPWTRA2nPM';
+
+        try {
+          final streamInfo = await VideoStreamResolver.resolve(mediaUrl);
+          if (streamInfo != null && streamInfo.streamUrl.isNotEmpty) {
+            await ref.read(downloadTasksProvider.notifier).enqueue(
+                  lesson.id,
+                  streamInfo.streamUrl,
+                  '${lesson.id}.mp4',
+                  streamInfo.totalBytes > 0 ? streamInfo.totalBytes : 35000000,
+                );
+          }
+        } catch (_) {}
+      }
     }
   }
 
@@ -261,9 +289,27 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
 
   Widget _buildDownloadAction(BuildContext context, String courseId) {
     final tasks = ref.watch(downloadTasksProvider);
-    final task = tasks[courseId];
+    final learningState = ref.watch(learningNotifierProvider);
+    final course = learningState.resources.firstWhere(
+      (r) => r.id == courseId,
+      orElse: () => learningState.resources.first,
+    );
+    final allLessons = course.modules.expand((m) => m.lessons).toList();
+    final downloadedLessons = allLessons.where((l) {
+      final task = tasks[l.id];
+      return task != null &&
+          task.state == DownloadState.completed &&
+          File(task.savePath).existsSync();
+    }).length;
 
-    if (task?.state == DownloadState.completed) {
+    final isAnyDownloading = allLessons.any((l) {
+      final task = tasks[l.id];
+      return task != null &&
+          (task.state == DownloadState.downloading ||
+              task.state == DownloadState.queued);
+    });
+
+    if (downloadedLessons == allLessons.length && allLessons.isNotEmpty) {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -271,37 +317,34 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.green.shade200),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.cloud_done, color: Colors.green),
-            SizedBox(width: 12),
-            Text('Available Offline',
-                style: TextStyle(
-                    color: Colors.green, fontWeight: FontWeight.bold,),),
+            const Icon(Icons.cloud_done, color: Colors.green),
+            const SizedBox(width: 12),
+            Text(
+              'Available Offline ($downloadedLessons/${allLessons.length} lessons ready ✓)',
+              style: const TextStyle(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       );
     }
 
-    if (task?.state == DownloadState.downloading ||
-        task?.state == DownloadState.queued) {
+    if (isAnyDownloading) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(task?.state == DownloadState.queued
-                  ? 'Queued...'
-                  : 'Downloading...',),
-              IconButton(
-                icon: const Icon(Icons.pause),
-                onPressed: () => _handleDownloadAction(courseId, task),
-              ),
+              Text('Downloading ($downloadedLessons/${allLessons.length} downloaded)...'),
             ],
           ),
           const SizedBox(height: 8),
-          LinearProgressIndicator(value: task?.progress ?? 0.0),
+          const LinearProgressIndicator(),
         ],
       );
     }
@@ -310,8 +353,12 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
       width: double.infinity,
       child: ElevatedButton.icon(
         icon: const Icon(Icons.cloud_download),
-        label: const Text('Download Course Videos for Offline Use'),
-        onPressed: () => _handleDownloadAction(courseId, task),
+        label: Text(
+          downloadedLessons > 0
+              ? 'Download Remaining Lessons ($downloadedLessons/${allLessons.length} ready)'
+              : 'Download Course Videos for Offline Use',
+        ),
+        onPressed: () => _handleDownloadAction(courseId),
       ),
     );
   }

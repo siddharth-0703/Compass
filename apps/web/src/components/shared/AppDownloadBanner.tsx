@@ -9,7 +9,7 @@ interface AppDownloadBannerProps {
 }
 
 export function AppDownloadBanner({
-  apkUrl = "/downloads/app-release.apk",
+  apkUrl = "/downloads/compass.apk",
 }: AppDownloadBannerProps) {
   const [isVisible, setIsVisible] = useState(false)
 
@@ -44,7 +44,7 @@ export function AppDownloadBanner({
         <div className="flex items-center gap-2 shrink-0">
           <a
             href={apkUrl}
-            download="Compass-App.apk"
+            download="compass.apk"
             className="inline-flex items-center gap-1.5 bg-white text-teal-900 font-semibold px-3 py-1 rounded-md text-xs hover:bg-teal-50 transition-colors shadow-sm"
           >
             <Download className="w-3.5 h-3.5" />

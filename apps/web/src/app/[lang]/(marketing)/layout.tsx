@@ -34,7 +34,7 @@ export default async function MarketingLayout({
             <Link href={`/${lang}#schemes`} className="text-muted-foreground hover:text-primary transition-colors">{dict.navigation.schemes}</Link>
           </nav>
           <div className="flex items-center space-x-2 md:space-x-4">
-            <a href="/downloads/app-release.apk" download className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-teal-400 hover:text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 px-3 py-1.5 rounded-full transition-all">
+            <a href="/downloads/compass.apk" download="compass.apk" className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-teal-400 hover:text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 px-3 py-1.5 rounded-full transition-all">
               <Smartphone className="w-3.5 h-3.5" />
               <span>{dict.common?.androidApp || "Android App"}</span>
             </a>
@@ -77,7 +77,7 @@ export default async function MarketingLayout({
           <div>
             <h4 className="font-semibold mb-4 text-foreground">Resources</h4>
             <ul className="space-y-2 text-muted-foreground">
-              <li><a href="/downloads/app-release.apk" download className="text-teal-400 font-medium hover:underline flex items-center gap-1">📱 Download Android App</a></li>
+              <li><a href="/downloads/compass.apk" download="compass.apk" className="text-teal-400 font-medium hover:underline flex items-center gap-1">📱 Download Android App</a></li>
               <li><Link href={`/${lang}/docs`} className="hover:text-primary">Documentation</Link></li>
               <li><Link href={`/${lang}/privacy`} className="hover:text-primary">Privacy</Link></li>
               <li><Link href={`/${lang}/terms`} className="hover:text-primary">Terms</Link></li>

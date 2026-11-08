@@ -110,9 +110,35 @@ dist
 # Turborepo
 .turbo
 
-# Mobile specific
+# Mobile & Flutter specific
 apps/mobile/build/
 apps/mobile/.dart_tool/
+apps/mobile/.flutter-plugins-dependencies
+apps/mobile/.pub-cache/
+apps/mobile/.pub/
+
+# Android Binaries
+# Ignore all APK/AAB builds across the repo EXCEPT the official web download package
+*.apk
+*.aab
+!apps/web/public/downloads/compass.apk
+
+# Local developer scratch / run notes
 CMD_RUN
-CMD_RUN
-CMD_RUN
+scratch/
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# TypeScript build info & Next.js generated types
+*.tsbuildinfo
+next-env.d.ts

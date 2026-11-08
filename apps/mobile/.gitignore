@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Compiled Android Binaries (keep mobile workspace clean)
+*.apk
+*.aab
+*.ap_

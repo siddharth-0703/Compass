@@ -19,6 +19,37 @@ class MarketPricesScreen extends ConsumerWidget {
     final statesAsync = ref.watch(marketStatesProvider);
     final commoditiesAsync = ref.watch(marketCommoditiesProvider(notifier.currentState));
     final marketsAsync = ref.watch(marketMarketsProvider(notifier.currentState));
+
+    // Available lists with guaranteed zero-hang APMC fallbacks
+    final availableStates = statesAsync.valueOrNull ?? const [
+      'Maharashtra',
+      'Madhya Pradesh',
+      'Gujarat',
+      'Karnataka',
+      'Punjab',
+      'Uttar Pradesh',
+    ];
+    final availableCommodities = commoditiesAsync.valueOrNull ?? const [
+      'Wheat',
+      'Onion',
+      'Soybean',
+      'Cotton',
+      'Tomato',
+      'Rice',
+      'Pomegranate',
+      'Banana',
+    ];
+    final availableMarkets = marketsAsync.valueOrNull ?? const [
+      'All Markets',
+      'Pune APMC',
+      'Lasalgaon APMC',
+      'Akola APMC',
+      'Nagpur APMC',
+      'Narayangaon APMC',
+      'Kolhapur APMC',
+      'Solapur APMC',
+      'Jalgaon APMC',
+    ];
     
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -99,38 +130,44 @@ class MarketPricesScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          statesAsync.when(
-                            data: (states) => DropdownButtonFormField<String>(
-                              initialValue: states.contains(notifier.currentState)
-                                  ? notifier.currentState
-                                  : null,
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 12,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .outlineVariant,
-                                  ),
-                                ),
-                                hintText: strings.isHindi ? 'राज्य चुनें' : (strings.isMarathi ? 'राज्य निवडा' : 'Select State'),
+                          DropdownButtonFormField<String>(
+                            key: ValueKey('mandi_state_${notifier.currentState}'),
+                            initialValue: availableStates.contains(notifier.currentState)
+                                ? notifier.currentState
+                                : (availableStates.isNotEmpty ? availableStates.first : null),
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12,
                               ),
-                              items: states
-                                  .map((s) => DropdownMenuItem(
-                                      value: s, child: Text(s),),)
-                                  .toList(),
-                              onChanged: (val) {
-                                if (val != null) {
-                                  notifier.fetchPrices(state: val);
-                                }
-                              },
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .outlineVariant,
+                                ),
+                              ),
+                              hintText: strings.isHindi ? 'राज्य चुनें' : (strings.isMarathi ? 'राज्य निवडा' : 'Select State'),
+                              suffixIcon: statesAsync.isLoading
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: Padding(
+                                        padding: EdgeInsets.all(14.0),
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    )
+                                  : null,
                             ),
-                            loading: () => const Center(
-                                child: CircularProgressIndicator(),),
-                            error: (_, __) => Text(strings.isHindi ? 'राज्य लोड करने में विफल' : 'Failed to load states'),
+                            items: availableStates
+                                .map((s) => DropdownMenuItem(
+                                    value: s, child: Text(s),),)
+                                .toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                notifier.fetchPrices(state: val);
+                              }
+                            },
                           ),
                           const SizedBox(height: 16),
                           
@@ -143,41 +180,48 @@ class MarketPricesScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          commoditiesAsync.when(
-                            data: (commodities) => DropdownButtonFormField<String>(
-                              initialValue: commodities.contains(notifier.currentCommodity)
-                                  ? notifier.currentCommodity
-                                  : null,
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 12,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .outlineVariant,
-                                  ),
-                                ),
-                                hintText: strings.isHindi ? 'फसल चुनें' : (strings.isMarathi ? 'पीक निवडा' : 'Select Crop'),
+                          DropdownButtonFormField<String>(
+                            key: ValueKey('mandi_commodity_${notifier.currentCommodity}'),
+                            initialValue: (notifier.currentCommodity != null && availableCommodities.contains(notifier.currentCommodity))
+                                ? notifier.currentCommodity
+                                : null,
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12,
                               ),
-                              items: [
-                                DropdownMenuItem<String>(
-                                  value: null,
-                                  child: Text(strings.allCommodities),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .outlineVariant,
                                 ),
-                                ...commodities.map((c) =>
-                                    DropdownMenuItem(value: c, child: Text(c)),),
-                              ],
-                              onChanged: (val) {
-                                notifier.fetchPrices(commodity: val);
-                              },
+                              ),
+                              hintText: strings.isHindi ? 'फसल चुनें' : (strings.isMarathi ? 'पीक निवडा' : 'Select Crop'),
+                              suffixIcon: commoditiesAsync.isLoading
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: Padding(
+                                        padding: EdgeInsets.all(14.0),
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    )
+                                  : null,
                             ),
-                            loading: () => const Center(
-                                child: CircularProgressIndicator(),),
-                            error: (_, __) =>
-                                Text(strings.isHindi ? 'फसलें लोड करने में विफल' : 'Failed to load commodities'),
+                            items: [
+                              DropdownMenuItem<String>(
+                                value: null,
+                                child: Text(strings.allCommodities),
+                              ),
+                              ...availableCommodities
+                                  .where((c) => c != 'All Commodities')
+                                  .map((c) =>
+                                      DropdownMenuItem(value: c, child: Text(c)),),
+                            ],
+                            onChanged: (val) {
+                              notifier.fetchPrices(commodity: val);
+                            },
                           ),
                           const SizedBox(height: 16),
 
@@ -190,41 +234,48 @@ class MarketPricesScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          marketsAsync.when(
-                            data: (markets) => DropdownButtonFormField<String>(
-                              initialValue: markets.contains(notifier.currentMarket)
-                                  ? notifier.currentMarket
-                                  : null,
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 12,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .outlineVariant,
-                                  ),
-                                ),
-                                hintText: strings.isHindi ? 'मंडी चुनें' : (strings.isMarathi ? 'बाजार निवडा' : 'Select Market'),
+                          DropdownButtonFormField<String>(
+                            key: ValueKey('mandi_market_${notifier.currentMarket}'),
+                            initialValue: (notifier.currentMarket != null && availableMarkets.contains(notifier.currentMarket))
+                                ? notifier.currentMarket
+                                : null,
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12,
                               ),
-                              items: [
-                                DropdownMenuItem<String>(
-                                  value: null,
-                                  child: Text(strings.allMarkets),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .outlineVariant,
                                 ),
-                                ...markets.map((m) =>
-                                    DropdownMenuItem(value: m, child: Text(m)),),
-                              ],
-                              onChanged: (val) {
-                                notifier.fetchPrices(market: val);
-                              },
+                              ),
+                              hintText: strings.isHindi ? 'मंडी चुनें' : (strings.isMarathi ? 'बाजार निवडा' : 'Select Market'),
+                              suffixIcon: marketsAsync.isLoading
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: Padding(
+                                        padding: EdgeInsets.all(14.0),
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    )
+                                  : null,
                             ),
-                            loading: () => const Center(
-                                child: CircularProgressIndicator(),),
-                            error: (_, __) =>
-                                Text(strings.isHindi ? 'मंडियां लोड करने में विफल' : 'Failed to load markets'),
+                            items: [
+                              DropdownMenuItem<String>(
+                                value: null,
+                                child: Text(strings.allMarkets),
+                              ),
+                              ...availableMarkets
+                                  .where((m) => m != 'All Markets')
+                                  .map((m) =>
+                                      DropdownMenuItem(value: m, child: Text(m)),),
+                            ],
+                            onChanged: (val) {
+                              notifier.fetchPrices(market: val);
+                            },
                           ),
                           const SizedBox(height: 24),
                           
@@ -254,19 +305,25 @@ class MarketPricesScreen extends ConsumerWidget {
                   ),
                   
                   if (notifier.lastUpdated != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          'Last updated: ${DateFormat.jm().format(DateTime.parse(notifier.lastUpdated!).toLocal())}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                    Builder(
+                      builder: (context) {
+                        final parsed = DateTime.tryParse(notifier.lastUpdated!);
+                        final timeStr = parsed != null ? DateFormat.jm().format(parsed.toLocal()) : 'Today';
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              '${strings.isHindi ? "अंतिम अपडेट" : (strings.isMarathi ? "शेवटचे अपडेट" : "Last updated")}: $timeStr',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                 ],
               ),

@@ -62,7 +62,11 @@ class ApiClient {
       _isRefreshing = true;
       try {
         final refreshToken = await _secureStorage.getRefreshToken();
-        if (refreshToken == null) throw Exception('No refresh token');
+        if (refreshToken == null ||
+            refreshToken.isEmpty ||
+            refreshToken.startsWith('demo_')) {
+          throw Exception('No valid refresh token');
+        }
 
         // Note: For Next.js BFF we used cookies, but for Mobile we use Bearer tokens
         // Ensure backend accepts Bearer token or adapt accordingly
@@ -82,16 +86,25 @@ class ApiClient {
         _isRefreshing = false;
 
         // Replay queued requests
-        for (var req in _refreshQueue) {
+        final pending = List<Map<String, dynamic>>.from(_refreshQueue);
+        _refreshQueue.clear();
+        for (final req in pending) {
           final options = req['options'] as RequestOptions;
           final reqHandler = req['handler'] as ErrorInterceptorHandler;
           options.headers['Authorization'] = 'Bearer $newAccessToken';
           _dio.fetch(options).then(
                 (res) => reqHandler.resolve(res),
-                onError: (err) => reqHandler.reject(err),
+                onError: (err) => reqHandler.reject(
+                  err is DioException
+                      ? err
+                      : DioException(
+                          requestOptions: options,
+                          error: err,
+                          type: DioExceptionType.unknown,
+                        ),
+                ),
               );
         }
-        _refreshQueue.clear();
 
         // Replay current request
         e.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
@@ -99,7 +112,21 @@ class ApiClient {
         return handler.resolve(cloneReq);
       } catch (error) {
         _isRefreshing = false;
+        final pending = List<Map<String, dynamic>>.from(_refreshQueue);
         _refreshQueue.clear();
+        for (final req in pending) {
+          final reqHandler = req['handler'] as ErrorInterceptorHandler;
+          final options = req['options'] as RequestOptions;
+          reqHandler.reject(
+            error is DioException
+                ? error
+                : DioException(
+                    requestOptions: options,
+                    error: error,
+                    type: DioExceptionType.unknown,
+                  ),
+          );
+        }
         if (error is DioException &&
             (error.response?.statusCode == 401 ||
                 error.response?.statusCode == 403)) {

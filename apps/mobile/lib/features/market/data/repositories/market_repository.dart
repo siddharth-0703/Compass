@@ -28,7 +28,9 @@ class MarketRepository {
     final cacheKey = 'market_prices_${queryParams.toString()}';
 
     try {
-      final response = await _apiClient.dio.get('/mandi/prices', queryParameters: queryParams);
+      final response = await _apiClient.dio
+          .get('/mandi/prices', queryParameters: queryParams)
+          .timeout(const Duration(milliseconds: 2500));
       if (response.data != null && response.data['success'] == true) {
         final List<dynamic> data = response.data['data'] ?? [];
         if (data.isNotEmpty) {
@@ -169,30 +171,67 @@ class MarketRepository {
   }
 
   Future<List<String>> getStates() async {
+    const defaultStates = ['Maharashtra', 'Madhya Pradesh', 'Gujarat', 'Karnataka', 'Punjab', 'Uttar Pradesh'];
     try {
-      final response = await _apiClient.dio.get('/mandi/states');
-      if (response.data != null && response.data['success'] == true) {
-        final list = (response.data['data'] as List).cast<String>();
-        if (list.isNotEmpty) return list;
+      final cached = HiveStorage.settingsBox.get('mandi_states');
+      if (cached != null && (cached as List).isNotEmpty) {
+        return cached.cast<String>();
       }
     } catch (_) {}
-    return ['Maharashtra', 'Madhya Pradesh', 'Gujarat', 'Karnataka', 'Punjab', 'Uttar Pradesh'];
+
+    try {
+      final response = await _apiClient.dio
+          .get('/mandi/states')
+          .timeout(const Duration(milliseconds: 2500));
+      if (response.data != null && response.data['success'] == true) {
+        final list = (response.data['data'] as List).cast<String>();
+        if (list.isNotEmpty) {
+          await HiveStorage.settingsBox.put('mandi_states', list);
+          return list;
+        }
+      }
+    } catch (_) {}
+    return defaultStates;
   }
 
   Future<List<String>> getCommodities(String state) async {
+    const defaultCommodities = ['Wheat', 'Onion', 'Soybean', 'Cotton', 'Tomato', 'Rice', 'Pomegranate', 'Banana'];
+    final cacheKey = 'mandi_commodities_${state.toLowerCase()}';
     try {
-      final response = await _apiClient.dio.get('/mandi/commodities', queryParameters: {'state': state});
-      if (response.data != null && response.data['success'] == true) {
-        final list = (response.data['data'] as List).cast<String>();
-        if (list.isNotEmpty) return list;
+      final cached = HiveStorage.settingsBox.get(cacheKey);
+      if (cached != null && (cached as List).isNotEmpty) {
+        return cached.cast<String>();
       }
     } catch (_) {}
-    return ['All Commodities', 'Wheat', 'Onion', 'Soybean', 'Cotton', 'Tomato', 'Rice', 'Pomegranate', 'Banana'];
+
+    try {
+      final response = await _apiClient.dio
+          .get('/mandi/commodities', queryParameters: {'state': state})
+          .timeout(const Duration(milliseconds: 2500));
+      if (response.data != null && response.data['success'] == true) {
+        final list = (response.data['data'] as List).cast<String>();
+        if (list.isNotEmpty) {
+          await HiveStorage.settingsBox.put(cacheKey, list);
+          return list;
+        }
+      }
+    } catch (_) {}
+    return defaultCommodities;
   }
 
   Future<List<String>> getMarkets(String state) async {
+    final cacheKey = 'mandi_markets_${state.toLowerCase()}';
     try {
-      final response = await _apiClient.dio.get('/mandi/markets', queryParameters: {'state': state});
+      final cached = HiveStorage.settingsBox.get(cacheKey);
+      if (cached != null && (cached as List).isNotEmpty) {
+        return cached.cast<String>();
+      }
+    } catch (_) {}
+
+    try {
+      final response = await _apiClient.dio
+          .get('/mandi/markets', queryParameters: {'state': state})
+          .timeout(const Duration(milliseconds: 2500));
       if (response.data != null && response.data['success'] == true) {
         final List<dynamic> data = response.data['data'] ?? [];
         final list = data
@@ -200,7 +239,9 @@ class MarketRepository {
             .where((s) => s.isNotEmpty)
             .toList();
         if (list.isNotEmpty) {
-          return ['All Markets', ...list];
+          final result = ['All Markets', ...list];
+          await HiveStorage.settingsBox.put(cacheKey, result);
+          return result;
         }
       }
     } catch (_) {}

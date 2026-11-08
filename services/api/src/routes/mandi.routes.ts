@@ -1,14 +1,13 @@
 import { Router } from 'express';
 import { getStates, getCommodities, getMarkets, getPrices, getHistory } from '../controllers/mandi.controller';
-import { requireAuth } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-// Routes for Mandi API integration
-router.get('/states', requireAuth, getStates);
-router.get('/commodities', requireAuth, getCommodities);
-router.get('/markets', requireAuth, getMarkets);
-router.get('/prices', requireAuth, getPrices);
-router.get('/prices/history', requireAuth, getHistory);
+// Routes for Mandi API integration - public agricultural market data
+router.get('/states', getStates);
+router.get('/commodities', getCommodities);
+router.get('/markets', getMarkets);
+router.get('/prices', getPrices);
+router.get('/prices/history', getHistory);
 
 export default router;

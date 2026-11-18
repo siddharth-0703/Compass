@@ -24,16 +24,45 @@ class MarketPricesNotifier extends StateNotifier<AsyncValue<List<MarketPriceMode
   String? get currentMarket => _currentMarket;
   String? get lastUpdated => _repository.getLastUpdated(_currentState, _currentCommodity);
 
-  Future<void> fetchPrices({String? state, String? commodity, String? market}) async {
+  void selectState(String state) {
+    if (_currentState != state) {
+      _currentState = state;
+      _currentMarket = null;
+    }
+  }
+
+  void selectCommodity(String? commodity) {
+    _currentCommodity = (commodity == null || commodity.isEmpty || commodity == 'All Commodities') ? null : commodity;
+  }
+
+  void selectMarket(String? market) {
+    _currentMarket = (market == null || market.isEmpty || market == 'All Markets') ? null : market;
+  }
+
+  Future<void> fetchPrices({
+    String? state,
+    bool updateCommodity = false,
+    String? commodity,
+    bool updateMarket = false,
+    String? market,
+  }) async {
     if (state != null) {
       if (_currentState != state) {
-        // Reset market if state changes
         _currentMarket = null;
       }
       _currentState = state;
     }
-    if (commodity != null) _currentCommodity = (commodity == 'All Commodities' ? null : commodity);
-    if (market != null) _currentMarket = (market == 'All Markets' ? null : market);
+    if (updateCommodity) {
+      _currentCommodity = (commodity == null || commodity.isEmpty || commodity == 'All Commodities') ? null : commodity;
+    } else if (commodity != null) {
+      _currentCommodity = (commodity == 'All Commodities' || commodity.isEmpty) ? null : commodity;
+    }
+
+    if (updateMarket) {
+      _currentMarket = (market == null || market.isEmpty || market == 'All Markets') ? null : market;
+    } else if (market != null) {
+      _currentMarket = (market == 'All Markets' || market.isEmpty) ? null : market;
+    }
 
     this.state = const AsyncValue.loading();
     try {
@@ -44,8 +73,12 @@ class MarketPricesNotifier extends StateNotifier<AsyncValue<List<MarketPriceMode
       );
       this.state = AsyncValue.data(prices);
     } catch (e) {
-      // Fallback: Never crash the UI with an error card
-      final prices = await _repository.getPrices(state: _currentState);
+      // Fallback: Never crash the UI with an error card, preserve filters
+      final prices = await _repository.getPrices(
+        state: _currentState,
+        commodity: _currentCommodity,
+        market: _currentMarket,
+      );
       this.state = AsyncValue.data(prices);
     }
   }

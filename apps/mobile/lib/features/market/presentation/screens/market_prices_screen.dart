@@ -20,36 +20,71 @@ class MarketPricesScreen extends ConsumerWidget {
     final commoditiesAsync = ref.watch(marketCommoditiesProvider(notifier.currentState));
     final marketsAsync = ref.watch(marketMarketsProvider(notifier.currentState));
 
-    // Available lists with guaranteed zero-hang APMC fallbacks
-    final availableStates = statesAsync.valueOrNull ?? const [
+    // Deduplicated lists strictly matching web content & APMC roster
+    final rawStates = statesAsync.valueOrNull ?? const [
       'Maharashtra',
       'Madhya Pradesh',
       'Gujarat',
       'Karnataka',
       'Punjab',
+      'Haryana',
+      'Rajasthan',
       'Uttar Pradesh',
+      'Tamil Nadu',
+      'Andhra Pradesh',
     ];
-    final availableCommodities = commoditiesAsync.valueOrNull ?? const [
+    final availableStates = rawStates
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toSet()
+        .toList();
+
+    final rawCommodities = commoditiesAsync.valueOrNull ?? const [
       'Wheat',
-      'Onion',
-      'Soybean',
-      'Cotton',
-      'Tomato',
       'Rice',
+      'Cotton',
+      'Soybean',
+      'Maize',
+      'Onion',
+      'Potato',
+      'Tomato',
+      'Mustard',
+      'Gram',
+      'Bajra(Pearl Millet/Cumbu)',
       'Pomegranate',
       'Banana',
     ];
-    final availableMarkets = marketsAsync.valueOrNull ?? const [
+    final availableCommodities = rawCommodities
+        .map((c) => c.trim())
+        .where((c) => c.isNotEmpty)
+        .toSet()
+        .toList();
+
+    final rawMarkets = marketsAsync.valueOrNull ?? const [
       'All Markets',
-      'Pune APMC',
-      'Lasalgaon APMC',
       'Akola APMC',
+      'APMC Jalgaon',
+      'APMC Kolhapur',
+      'APMC Mumbai',
+      'APMC Nagpur',
+      'APMC Nasik',
+      'APMC Pune',
+      'APMC Solapur',
+      'Jalgaon APMC',
+      'Jalgaon(Masawat) APMC',
+      'Kolhapur APMC',
+      'Lasalgaon APMC',
+      'Lasalgaon(Niphad) APMC',
       'Nagpur APMC',
       'Narayangaon APMC',
-      'Kolhapur APMC',
+      'Pune APMC',
       'Solapur APMC',
-      'Jalgaon APMC',
     ];
+    final availableMarkets = rawMarkets
+        .map((m) => m.trim())
+        .where((m) => m.isNotEmpty)
+        .toSet()
+        .toList();
     
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -120,7 +155,7 @@ class MarketPricesScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 24),
                           
-                          // Form Fields
+                          // Form Fields - 1: State
                           Text(
                             strings.state,
                             style: TextStyle(
@@ -147,7 +182,7 @@ class MarketPricesScreen extends ConsumerWidget {
                                       .outlineVariant,
                                 ),
                               ),
-                              hintText: strings.isHindi ? 'राज्य चुनें' : (strings.isMarathi ? 'राज्य निवडा' : 'Select State'),
+                              hintText: strings.selectState,
                               suffixIcon: statesAsync.isLoading
                                   ? const SizedBox(
                                       width: 16,
@@ -161,7 +196,9 @@ class MarketPricesScreen extends ConsumerWidget {
                             ),
                             items: availableStates
                                 .map((s) => DropdownMenuItem(
-                                    value: s, child: Text(s),),)
+                                    value: s,
+                                    child: Text(strings.translateState(s)),
+                                  ),)
                                 .toList(),
                             onChanged: (val) {
                               if (val != null) {
@@ -171,6 +208,7 @@ class MarketPricesScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 16),
                           
+                          // Form Fields - 2: Commodity
                           Text(
                             strings.commodityCrop,
                             style: TextStyle(
@@ -197,7 +235,7 @@ class MarketPricesScreen extends ConsumerWidget {
                                       .outlineVariant,
                                 ),
                               ),
-                              hintText: strings.isHindi ? 'फसल चुनें' : (strings.isMarathi ? 'पीक निवडा' : 'Select Crop'),
+                              hintText: strings.selectCrop,
                               suffixIcon: commoditiesAsync.isLoading
                                   ? const SizedBox(
                                       width: 16,
@@ -217,14 +255,18 @@ class MarketPricesScreen extends ConsumerWidget {
                               ...availableCommodities
                                   .where((c) => c != 'All Commodities')
                                   .map((c) =>
-                                      DropdownMenuItem(value: c, child: Text(c)),),
+                                      DropdownMenuItem(
+                                        value: c,
+                                        child: Text(strings.translateCrop(c)),
+                                      ),),
                             ],
                             onChanged: (val) {
-                              notifier.fetchPrices(commodity: val);
+                              notifier.fetchPrices(updateCommodity: true, commodity: val);
                             },
                           ),
                           const SizedBox(height: 16),
 
+                          // Form Fields - 3: Market (APMC)
                           Text(
                             strings.marketMandi,
                             style: TextStyle(
@@ -251,7 +293,7 @@ class MarketPricesScreen extends ConsumerWidget {
                                       .outlineVariant,
                                 ),
                               ),
-                              hintText: strings.isHindi ? 'मंडी चुनें' : (strings.isMarathi ? 'बाजार निवडा' : 'Select Market'),
+                              hintText: strings.selectMarket,
                               suffixIcon: marketsAsync.isLoading
                                   ? const SizedBox(
                                       width: 16,
@@ -271,19 +313,33 @@ class MarketPricesScreen extends ConsumerWidget {
                               ...availableMarkets
                                   .where((m) => m != 'All Markets')
                                   .map((m) =>
-                                      DropdownMenuItem(value: m, child: Text(m)),),
+                                      DropdownMenuItem(
+                                        value: m,
+                                        child: Text(strings.translateMarket(m)),
+                                      ),),
                             ],
-                            onChanged: (val) {
-                              notifier.fetchPrices(market: val);
+                            onChanged: notifier.currentState.isEmpty ? null : (val) {
+                              notifier.fetchPrices(updateMarket: true, market: val);
                             },
                           ),
                           const SizedBox(height: 24),
                           
                           ElevatedButton.icon(
-                            onPressed: () => notifier.fetchPrices(),
-                            icon: const Icon(LucideIcons.refreshCw, size: 18),
+                            onPressed: pricesState.isLoading
+                                ? null
+                                : () => notifier.fetchPrices(),
+                            icon: pricesState.isLoading
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(LucideIcons.refreshCw, size: 18),
                             label: Text(
-                              strings.isHindi ? 'भाव देखें' : (strings.isMarathi ? 'भाव तपासा' : 'Check Prices'),
+                              strings.checkPricesBtn,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -314,7 +370,7 @@ class MarketPricesScreen extends ConsumerWidget {
                           child: Align(
                             alignment: Alignment.centerRight,
                             child: Text(
-                              '${strings.isHindi ? "अंतिम अपडेट" : (strings.isMarathi ? "शेवटचे अपडेट" : "Last updated")}: $timeStr',
+                              '${strings.isHindi ? "अंतिम अपडेट:" : (strings.isMarathi ? "अंतिम अपडेट:" : "Last updated:")} $timeStr',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -399,7 +455,7 @@ class MarketPricesScreen extends ConsumerWidget {
                         onPressed: () => notifier.fetchPrices(),
                         icon: const Icon(LucideIcons.refreshCw, size: 16),
                         label: Text(
-                          strings.isHindi ? 'भाव ताज़ा करें' : (strings.isMarathi ? 'भाव रिफ्रेश करा' : 'Refresh Rates'),
+                          strings.checkPricesBtn,
                         ),
                       ),
                     ],
@@ -430,7 +486,7 @@ class MarketPricesScreen extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          // Top green bar equivalent
+          // Top green bar equivalent to web border-t-4 border-t-green-500
           Container(
             height: 4,
             decoration: const BoxDecoration(
@@ -438,7 +494,7 @@ class MarketPricesScreen extends ConsumerWidget {
               borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
             ),
           ),
-          // Header Section
+          // Header Section matching web
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -453,12 +509,12 @@ class MarketPricesScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        price.commodity,
+                        strings.translateCrop(price.commodity),
                         style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${price.market}, ${price.state}',
+                        '${strings.translateMarket(price.market)}, ${strings.translateState(price.state)}',
                         style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                       ),
                     ],
@@ -479,7 +535,7 @@ class MarketPricesScreen extends ConsumerWidget {
               ],
             ),
           ),
-          // Content Section
+          // Content Section matching web
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -487,7 +543,7 @@ class MarketPricesScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildPriceColumn(context, strings.minPrice, price.minPrice.toString(), false),
+                    _buildPriceColumn(context, strings.minLabel, price.minPrice.toStringAsFixed(0), false),
                     // Modal price box
                     Transform.translate(
                       offset: const Offset(0, -8),
@@ -501,19 +557,19 @@ class MarketPricesScreen extends ConsumerWidget {
                         child: Column(
                           children: [
                             Text(
-                              strings.modalPrice,
+                              strings.modalLabel,
                               style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green.shade800),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '₹${price.modalPrice}',
+                              '₹${price.modalPrice.toStringAsFixed(0)}',
                               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green.shade900),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    _buildPriceColumn(context, strings.maxPrice, price.maxPrice.toString(), false),
+                    _buildPriceColumn(context, strings.maxLabel, price.maxPrice.toStringAsFixed(0), false),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -522,12 +578,14 @@ class MarketPricesScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '${strings.isHindi ? "किस्म" : (strings.isMarathi ? "प्रकार" : "Variety")}: ${price.variety}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                    Expanded(
+                      child: Text(
+                        '${strings.varietyLabel} ${strings.translateVariety(price.variety)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
                       ),
                     ),
                     Container(
@@ -537,7 +595,7 @@ class MarketPricesScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        strings.isHindi ? 'इकाई: ₹/क्विंटल' : (strings.isMarathi ? 'एकक: ₹/क्विंटल' : 'Unit: ₹/quintal'),
+                        strings.unitLabel,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,

@@ -12,17 +12,33 @@ class MarketRepository {
     String? commodity,
     String? market,
   }) async {
-    final queryParams = <String, String>{};
-    if (state != null && state.isNotEmpty) queryParams['state'] = state;
-    if (commodity != null && commodity.isNotEmpty && commodity != 'All Commodities') {
-      queryParams['commodity'] = commodity;
+    final effectiveState = (state != null && state.trim().isNotEmpty) ? state.trim() : 'Maharashtra';
+    final queryParams = <String, String>{'state': effectiveState};
+
+    String? primaryCommodity;
+    String? altCommodity;
+    if (commodity != null && commodity.trim().isNotEmpty && commodity != 'All Commodities') {
+      final clean = commodity.trim();
+      if (clean.toLowerCase() == 'soybean') {
+        primaryCommodity = 'Soyabean';
+        altCommodity = 'Soybean';
+      } else if (clean.toLowerCase() == 'soyabean') {
+        primaryCommodity = 'Soyabean';
+        altCommodity = 'Soybean';
+      } else if (clean.toLowerCase() == 'gram') {
+        primaryCommodity = 'Bengal Gram(Gram)(Whole)';
+        altCommodity = 'Gram';
+      } else if (clean.toLowerCase() == 'rice') {
+        primaryCommodity = 'Rice';
+        altCommodity = 'Paddy(Common)';
+      } else {
+        primaryCommodity = clean;
+      }
+      queryParams['commodity'] = primaryCommodity;
     }
-    if (market != null && market.isNotEmpty && market != 'All Markets') {
-      queryParams['market'] = market;
-    }
-    
-    if (queryParams.isEmpty) {
-      queryParams['state'] = 'Maharashtra';
+
+    if (market != null && market.trim().isNotEmpty && market != 'All Markets') {
+      queryParams['market'] = market.trim();
     }
 
     final cacheKey = 'market_prices_${queryParams.toString()}';
@@ -30,11 +46,29 @@ class MarketRepository {
     try {
       final response = await _apiClient.dio
           .get('/mandi/prices', queryParameters: queryParams)
-          .timeout(const Duration(milliseconds: 2500));
+          .timeout(const Duration(milliseconds: 6000));
       if (response.data != null && response.data['success'] == true) {
-        final List<dynamic> data = response.data['data'] ?? [];
+        List<dynamic> data = response.data['data'] ?? [];
+        
+        // If specific commodity query returned 0 items and an alternative spelling exists, try it
+        if (data.isEmpty && altCommodity != null) {
+          final altParams = Map<String, String>.from(queryParams);
+          altParams['commodity'] = altCommodity;
+          try {
+            final altRes = await _apiClient.dio
+                .get('/mandi/prices', queryParameters: altParams)
+                .timeout(const Duration(milliseconds: 4000));
+            if (altRes.data != null && altRes.data['success'] == true) {
+              final altData = altRes.data['data'] ?? [];
+              if (altData is List && altData.isNotEmpty) {
+                data = altData;
+              }
+            }
+          } catch (_) {}
+        }
+
         if (data.isNotEmpty) {
-          final models = data.map((json) => MarketPriceModel.fromJson(json)).toList();
+          final models = data.map((json) => MarketPriceModel.fromJson(Map<String, dynamic>.from(json))).toList();
           
           await HiveStorage.settingsBox.put(cacheKey, data);
           await HiveStorage.settingsBox.put('${cacheKey}_timestamp', DateTime.now().toIso8601String());
@@ -143,6 +177,61 @@ class MarketRepository {
         maxPrice: 1650,
         modalPrice: 1400,
       ),
+      MarketPriceModel(
+        state: state ?? 'Maharashtra',
+        district: 'Pune',
+        market: 'Pune APMC',
+        commodity: 'Potato',
+        variety: 'Jyoti',
+        arrivalDate: 'Today',
+        minPrice: 1300,
+        maxPrice: 1800,
+        modalPrice: 1550,
+      ),
+      MarketPriceModel(
+        state: state ?? 'Maharashtra',
+        district: 'Nagpur',
+        market: 'Nagpur APMC',
+        commodity: 'Maize',
+        variety: 'Hybrid Yellow',
+        arrivalDate: 'Today',
+        minPrice: 2100,
+        maxPrice: 2450,
+        modalPrice: 2300,
+      ),
+      MarketPriceModel(
+        state: state ?? 'Maharashtra',
+        district: 'Akola',
+        market: 'Akola APMC',
+        commodity: 'Gram',
+        variety: 'Deshi Chana',
+        arrivalDate: 'Today',
+        minPrice: 5800,
+        maxPrice: 6500,
+        modalPrice: 6200,
+      ),
+      MarketPriceModel(
+        state: state ?? 'Maharashtra',
+        district: 'Nashik',
+        market: 'Lasalgaon APMC',
+        commodity: 'Bajra(Pearl Millet/Cumbu)',
+        variety: 'Hybrid Deshi',
+        arrivalDate: 'Today',
+        minPrice: 2150,
+        maxPrice: 2600,
+        modalPrice: 2380,
+      ),
+      MarketPriceModel(
+        state: state ?? 'Maharashtra',
+        district: 'Kolhapur',
+        market: 'Kolhapur APMC',
+        commodity: 'Mustard',
+        variety: 'Yellow Sarson',
+        arrivalDate: 'Today',
+        minPrice: 5200,
+        maxPrice: 5900,
+        modalPrice: 5600,
+      ),
     ];
 
     if (commodity != null && commodity.isNotEmpty && commodity != 'All Commodities') {
@@ -171,7 +260,18 @@ class MarketRepository {
   }
 
   Future<List<String>> getStates() async {
-    const defaultStates = ['Maharashtra', 'Madhya Pradesh', 'Gujarat', 'Karnataka', 'Punjab', 'Uttar Pradesh'];
+    const defaultStates = [
+      'Maharashtra',
+      'Madhya Pradesh',
+      'Gujarat',
+      'Karnataka',
+      'Punjab',
+      'Haryana',
+      'Rajasthan',
+      'Uttar Pradesh',
+      'Tamil Nadu',
+      'Andhra Pradesh',
+    ];
     try {
       final cached = HiveStorage.settingsBox.get('mandi_states');
       if (cached != null && (cached as List).isNotEmpty) {
@@ -182,12 +282,18 @@ class MarketRepository {
     try {
       final response = await _apiClient.dio
           .get('/mandi/states')
-          .timeout(const Duration(milliseconds: 2500));
+          .timeout(const Duration(milliseconds: 5000));
       if (response.data != null && response.data['success'] == true) {
-        final list = (response.data['data'] as List).cast<String>();
+        final list = (response.data['data'] as List)
+            .map((s) => s.toString().trim())
+            .where((s) => s.isNotEmpty)
+            .toSet()
+            .toList();
         if (list.isNotEmpty) {
-          await HiveStorage.settingsBox.put('mandi_states', list);
-          return list;
+          // Merge with default states ensuring no duplicates
+          final merged = {...defaultStates, ...list}.toList();
+          await HiveStorage.settingsBox.put('mandi_states', merged);
+          return merged;
         }
       }
     } catch (_) {}
@@ -195,7 +301,21 @@ class MarketRepository {
   }
 
   Future<List<String>> getCommodities(String state) async {
-    const defaultCommodities = ['Wheat', 'Onion', 'Soybean', 'Cotton', 'Tomato', 'Rice', 'Pomegranate', 'Banana'];
+    const defaultCommodities = [
+      'Wheat',
+      'Rice',
+      'Cotton',
+      'Soybean',
+      'Maize',
+      'Onion',
+      'Potato',
+      'Tomato',
+      'Mustard',
+      'Gram',
+      'Bajra(Pearl Millet/Cumbu)',
+      'Pomegranate',
+      'Banana',
+    ];
     final cacheKey = 'mandi_commodities_${state.toLowerCase()}';
     try {
       final cached = HiveStorage.settingsBox.get(cacheKey);
@@ -207,12 +327,18 @@ class MarketRepository {
     try {
       final response = await _apiClient.dio
           .get('/mandi/commodities', queryParameters: {'state': state})
-          .timeout(const Duration(milliseconds: 2500));
+          .timeout(const Duration(milliseconds: 5000));
       if (response.data != null && response.data['success'] == true) {
-        final list = (response.data['data'] as List).cast<String>();
+        final list = (response.data['data'] as List)
+            .map((c) => c.toString().trim())
+            .where((c) => c.isNotEmpty)
+            .toSet()
+            .toList();
         if (list.isNotEmpty) {
-          await HiveStorage.settingsBox.put(cacheKey, list);
-          return list;
+          // Merge with default commodities ensuring no duplicates
+          final merged = {...defaultCommodities, ...list}.toList();
+          await HiveStorage.settingsBox.put(cacheKey, merged);
+          return merged;
         }
       }
     } catch (_) {}
@@ -231,13 +357,15 @@ class MarketRepository {
     try {
       final response = await _apiClient.dio
           .get('/mandi/markets', queryParameters: {'state': state})
-          .timeout(const Duration(milliseconds: 2500));
+          .timeout(const Duration(milliseconds: 5000));
       if (response.data != null && response.data['success'] == true) {
         final List<dynamic> data = response.data['data'] ?? [];
         final list = data
-            .map((m) => m is Map ? (m['market']?.toString() ?? '') : m.toString())
+            .map((m) => m is Map ? (m['market']?.toString().trim() ?? '') : m.toString().trim())
             .where((s) => s.isNotEmpty)
+            .toSet() // DEDUPLICATE: prevents duplicate Flutter DropdownMenuItem assertion failure
             .toList();
+        list.sort();
         if (list.isNotEmpty) {
           final result = ['All Markets', ...list];
           await HiveStorage.settingsBox.put(cacheKey, result);
@@ -250,23 +378,49 @@ class MarketRepository {
     if (state.toLowerCase().contains('maharashtra')) {
       return [
         'All Markets',
-        'Pune APMC',
-        'Lasalgaon APMC',
         'Akola APMC',
+        'Amalner APMC',
+        'Amarawati APMC',
+        'APMC Jalgaon',
+        'APMC Kolhapur',
+        'APMC Mumbai',
+        'APMC Nagpur',
+        'APMC Nasik',
+        'APMC Pune',
+        'APMC Solapur',
+        'Barshi APMC',
+        'Beed APMC',
+        'Chalisgaon APMC',
+        'Dhule APMC',
+        'Jalgaon APMC',
+        'Jalgaon(Masawat) APMC',
+        'Kolhapur APMC',
+        'Lasalgaon APMC',
+        'Lasalgaon(Niphad) APMC',
+        'Malegaon APMC',
         'Nagpur APMC',
         'Narayangaon APMC',
-        'Kolhapur APMC',
+        'Nasik APMC',
+        'Pune APMC',
+        'Pune(Manjri) APMC',
+        'Pune(Moshi) APMC',
+        'Sangli APMC',
         'Solapur APMC',
-        'Jalgaon APMC',
       ];
     } else if (state.toLowerCase().contains('madhya pradesh')) {
-      return ['All Markets', 'Indore APMC', 'Bhopal APMC', 'Ujjain APMC', 'Neemuch APMC'];
+      return ['All Markets', 'Indore APMC', 'Bhopal APMC', 'Ujjain APMC', 'Neemuch APMC', 'Mandsaur APMC'];
     } else if (state.toLowerCase().contains('gujarat')) {
-      return ['All Markets', 'Rajkot APMC', 'Surat APMC', 'Unjha APMC', 'Gondal APMC'];
+      return ['All Markets', 'Rajkot APMC', 'Surat APMC', 'Unjha APMC', 'Gondal APMC', 'Ahmedabad APMC'];
     } else if (state.toLowerCase().contains('karnataka')) {
-      return ['All Markets', 'Yeshwanthpur APMC (Bengaluru)', 'Hubli APMC', 'Mysuru APMC'];
+      return ['All Markets', 'Yeshwanthpur APMC (Bengaluru)', 'Hubli APMC', 'Mysuru APMC', 'Belagavi APMC'];
     } else if (state.toLowerCase().contains('punjab')) {
-      return ['All Markets', 'Khanna APMC', 'Ludhiana APMC', 'Amritsar APMC'];
+      return ['All Markets', 'Khanna APMC', 'Ludhiana APMC', 'Amritsar APMC', 'Jalandhar APMC'];
+    } else if (state.toLowerCase().contains('haryana')) {
+      return ['All Markets', 'Karnal APMC', 'Ambala APMC', 'Hisar APMC', 'Sirsa APMC'];
+    } else if (state.toLowerCase().contains('rajasthan')) {
+      return ['All Markets', 'Jaipur APMC', 'Kota APMC', 'Jodhpur APMC', 'Alwar APMC'];
+    } else if (state.toLowerCase().contains('uttar pradesh')) {
+      return ['All Markets', 'Kanpur APMC', 'Agra APMC', 'Varanasi APMC', 'Meerut APMC', 'Lucknow APMC'];
     } else {
       return ['All Markets', 'Central Mandi', 'City APMC', 'Regional Market Yard'];
     }

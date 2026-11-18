@@ -180,26 +180,35 @@ class AppStrings {
   String get findMySchemes => isHindi ? 'मेरी योजनाएं खोजें' : (isMarathi ? 'माझ्या योजना शोधा' : 'Find My Schemes');
   String get stepOf => isHindi ? 'चरण' : (isMarathi ? 'टप्पा' : 'Step');
 
-  // Market Prices
+  // Market Prices (1:1 Web Match with dictionaries/hi.json, mr.json, en.json)
   String get marketPricesSubtitle => isHindi
       ? 'भारत भर में दैनिक थोक कृषि भाव देखें।'
       : (isMarathi ? 'संपूर्ण भारतातील दैनिक घाऊक कृषी भाव तपासा.' : 'Check daily wholesale agricultural prices across India.');
-  String get checkApmcRates => isHindi ? 'एपीएमसी मंडी भाव देखें' : (isMarathi ? 'एपीएमसी बाजार भाव तपासा' : 'Check APMC Mandi Rates');
+  String get checkApmcRates => isHindi ? 'APMC मंडी दरें जांचें' : (isMarathi ? 'APMC बाजारभाव तपासा' : 'Check APMC Mandi Rates');
   String get filterRatesSubtitle => isHindi
-      ? 'राज्य, मंडी या विशिष्ट फसल के अनुसार फ़िल्टर करें'
-      : (isMarathi ? 'राज्य, बाजार किंवा विशिष्ट पिकांनुसार फिल्टर करा' : 'Filter by state, market, or specific crop');
+      ? 'राज्य, बाज़ार या विशिष्ट फसल के आधार पर फ़िल्टर करें'
+      : (isMarathi ? 'राज्य, बाज़ार किंवा विशिष्ट पिकांनुसार फिल्टर करा' : 'Filter by state, market, or specific crop');
   String get state => isHindi ? 'राज्य' : (isMarathi ? 'राज्य' : 'State');
-  String get marketMandi => isHindi ? 'मंडी / बाजार' : (isMarathi ? 'बाजार / मंडी' : 'Market / Mandi');
-  String get commodityCrop => isHindi ? 'फसल / जिन्नस' : (isMarathi ? 'पीक / जिन्नस' : 'Commodity / Crop');
-  String get allMarkets => isHindi ? 'सभी मंडियां' : (isMarathi ? 'सर्व बाजार' : 'All Markets');
+  String get selectState => isHindi ? 'राज्य चुनें' : (isMarathi ? 'राज्य निवडा' : 'Select State');
+  String get commodityCrop => isHindi ? 'वस्तु (फसल)' : (isMarathi ? 'शेतमाल (पीक)' : 'Commodity');
+  String get selectCrop => isHindi ? 'फसल चुनें' : (isMarathi ? 'पीक निवडा' : 'Select Crop');
+  String get marketMandi => isHindi ? 'बाज़ार (APMC)' : (isMarathi ? 'बाज़ार (APMC)' : 'Market (APMC)');
+  String get selectMarket => isHindi ? 'बाज़ार चुनें' : (isMarathi ? 'बाज़ार निवडा' : 'Select Market');
+  String get allMarkets => isHindi ? 'सभी बाज़ार' : (isMarathi ? 'सर्व बाज़ार' : 'All Markets');
   String get allCommodities => isHindi ? 'सभी फसलें' : (isMarathi ? 'सर्व पिके' : 'All Commodities');
+  String get checkPricesBtn => isHindi ? 'कीमतें जांचें' : (isMarathi ? 'किमती तपासा' : 'Check Prices');
   String get crop => isHindi ? 'फसल' : (isMarathi ? 'पीक' : 'Crop');
-  String get market => isHindi ? 'मंडी' : (isMarathi ? 'बाजार' : 'Market');
-  String get minPrice => isHindi ? 'न्यूनतम भाव' : (isMarathi ? 'किमान भाव' : 'Min Price');
-  String get maxPrice => isHindi ? 'अधिकतम भाव' : (isMarathi ? 'कमाल भाव' : 'Max Price');
-  String get modalPrice => isHindi ? 'मॉडल भाव' : (isMarathi ? 'सरासरी भाव' : 'Modal Price');
+  String get market => isHindi ? 'बाज़ार' : (isMarathi ? 'बाज़ार' : 'Market');
+  String get minPrice => isHindi ? 'न्यूनतम' : (isMarathi ? 'किमान' : 'Min');
+  String get maxPrice => isHindi ? 'अधिकतम' : (isMarathi ? 'कमाल' : 'Max');
+  String get modalPrice => isHindi ? 'औसत (मॉडल)' : (isMarathi ? 'सरासरी' : 'Modal');
+  String get minLabel => isHindi ? 'न्यूनतम' : (isMarathi ? 'किमान' : 'Min');
+  String get maxLabel => isHindi ? 'अधिकतम' : (isMarathi ? 'कमाल' : 'Max');
+  String get modalLabel => isHindi ? 'औसत (मॉडल)' : (isMarathi ? 'सरासरी' : 'Modal');
+  String get varietyLabel => isHindi ? 'किस्म:' : (isMarathi ? 'जात:' : 'Variety:');
+  String get unitLabel => isHindi ? 'इकाई: ₹/क्विंटल' : (isMarathi ? 'एकक: ₹/क्विंटल' : 'Unit: ₹/quintal');
   String get arrivalDate => isHindi ? 'आवक तिथि' : (isMarathi ? 'आवक तारीख' : 'Arrival Date');
-  String get noMarketData => isHindi ? 'कोई मंडी डेटा नहीं मिला' : (isMarathi ? 'कोणताही बाजार डेटा आढळला नाही' : 'No market data found');
+  String get noMarketData => isHindi ? 'चयनित मानदंडों के लिए कोई मूल्य रिकॉर्ड नहीं मिला।' : (isMarathi ? 'निवडलेल्या निकषांसाठी कोणतीही किंमत नोंद आढळली नाही.' : 'No price records found for the selected criteria.');
 
   // Businesses
   String get myBusinesses => isHindi ? 'मेरे व्यवसाय' : (isMarathi ? 'माझे व्यवसाय' : 'My Businesses');
@@ -215,6 +224,172 @@ class AppStrings {
   String get save => isHindi ? 'सहेजें' : (isMarathi ? 'जतन करा' : 'Save');
   String get apply => isHindi ? 'लागू करें' : (isMarathi ? 'लागू करा' : 'Apply');
   String get retry => isHindi ? 'पुनः प्रयास करें' : (isMarathi ? 'पुन्हा प्रयत्न करा' : 'Retry');
+
+  // Dynamic Agricultural & Market Translations (matching web dynamicData)
+  String translateState(String state) {
+    if (isHindi) {
+      switch (state.trim()) {
+        case 'Maharashtra': return 'महाराष्ट्र';
+        case 'Madhya Pradesh': return 'मध्य प्रदेश';
+        case 'Gujarat': return 'गुजरात';
+        case 'Karnataka': return 'कर्नाटक';
+        case 'Punjab': return 'पंजाब';
+        case 'Haryana': return 'हरियाणा';
+        case 'Rajasthan': return 'राजस्थान';
+        case 'Uttar Pradesh': return 'उत्तर प्रदेश';
+        case 'Tamil Nadu': return 'तमिलनाडु';
+        case 'Andhra Pradesh': return 'आंध्र प्रदेश';
+        default: return state;
+      }
+    } else if (isMarathi) {
+      switch (state.trim()) {
+        case 'Maharashtra': return 'महाराष्ट्र';
+        case 'Madhya Pradesh': return 'मध्य प्रदेश';
+        case 'Gujarat': return 'गुजरात';
+        case 'Karnataka': return 'कर्नाटक';
+        case 'Punjab': return 'पंजाब';
+        case 'Haryana': return 'हरियाणा';
+        case 'Rajasthan': return 'राजस्थान';
+        case 'Uttar Pradesh': return 'उत्तर प्रदेश';
+        case 'Tamil Nadu': return 'तामिळनाडू';
+        case 'Andhra Pradesh': return 'आंध्र प्रदेश';
+        default: return state;
+      }
+    }
+    return state;
+  }
+
+  String translateCrop(String crop) {
+    final clean = crop.trim();
+    if (isHindi) {
+      switch (clean) {
+        case 'Wheat': return 'गेहूँ';
+        case 'Rice': return 'चावल';
+        case 'Paddy(Dhan)(Common)': return 'धान (सामान्य)';
+        case 'Cotton': return 'कपास';
+        case 'Soybean':
+        case 'Soyabean': return 'सोयाबीन';
+        case 'Maize': return 'मक्का';
+        case 'Onion': return 'प्याज';
+        case 'Potato': return 'आलू';
+        case 'Tomato': return 'टमाटर';
+        case 'Mustard': return 'सरसों';
+        case 'Gram':
+        case 'Bengal Gram(Gram)(Whole)': return 'चना';
+        case 'Bajra(Pearl Millet/Cumbu)': return 'बाजरा';
+        case 'Pomegranate': return 'अनार';
+        case 'Banana': return 'केला';
+        case 'Jowar(Sorghum)': return 'ज्वार';
+        case 'Green Gram(Moong)(Whole)': return 'मूँग';
+        case 'Black Gram(Urd Beans)(Whole)': return 'उड़द';
+        case 'Red gram/Arhar/Tur(whole)': return 'अरहर (तूर)';
+        case 'Apple': return 'सेब';
+        case 'Orange': return 'संतरा';
+        case 'Guava': return 'अमरूद';
+        case 'Ginger(Green)': return 'अदरक';
+        case 'Garlic': return 'लहसुन';
+        case 'Green Chilli': return 'हरी मिर्च';
+        case 'Brinjal': return 'बैंगन';
+        case 'Cabbage': return 'पत्ता गोभी';
+        case 'Cauliflower': return 'फूल गोभी';
+        case 'Spinach': return 'पालक';
+        case 'Raddish': return 'मूली';
+        case 'Carrot': return 'गाजर';
+        case 'Sweet Potato': return 'शकरकंद';
+        default: return crop;
+      }
+    } else if (isMarathi) {
+      switch (clean) {
+        case 'Wheat': return 'गहू';
+        case 'Rice': return 'तांदूळ';
+        case 'Paddy(Dhan)(Common)': return 'भात (सामान्य)';
+        case 'Cotton': return 'कापूस';
+        case 'Soybean':
+        case 'Soyabean': return 'सोयाबीन';
+        case 'Maize': return 'मका';
+        case 'Onion': return 'कांदा';
+        case 'Potato': return 'बटाटा';
+        case 'Tomato': return 'टोमॅटो';
+        case 'Mustard': return 'मोहरी';
+        case 'Gram':
+        case 'Bengal Gram(Gram)(Whole)': return 'हरभरा (चना)';
+        case 'Bajra(Pearl Millet/Cumbu)': return 'बाजरी';
+        case 'Pomegranate': return 'डाळिंब';
+        case 'Banana': return 'केळी';
+        case 'Jowar(Sorghum)': return 'ज्वारी';
+        case 'Green Gram(Moong)(Whole)': return 'मूग';
+        case 'Black Gram(Urd Beans)(Whole)': return 'उडीद';
+        case 'Red gram/Arhar/Tur(whole)': return 'तूर';
+        case 'Apple': return 'सफरचंद';
+        case 'Orange': return 'संत्रे';
+        case 'Guava': return 'पेरू';
+        case 'Ginger(Green)': return 'आले';
+        case 'Garlic': return 'लसूण';
+        case 'Green Chilli': return 'हिरवी मिरची';
+        case 'Brinjal': return 'वांगी';
+        case 'Cabbage': return 'कोबी';
+        case 'Cauliflower': return 'फ्लॉवर';
+        case 'Spinach': return 'पालक';
+        case 'Raddish': return 'मुळा';
+        case 'Carrot': return 'गाजर';
+        case 'Sweet Potato': return 'रताळे';
+        default: return crop;
+      }
+    }
+    return crop;
+  }
+
+  String translateMarket(String market) {
+    if (isHindi) {
+      if (market.contains('Jalgaon')) return market.replaceAll('Jalgaon', 'जलगाँव');
+      if (market.contains('Pune')) return market.replaceAll('Pune', 'पुणे');
+      if (market.contains('Nashik') || market.contains('Nasik')) return market.replaceAll('Nasik', 'नासिक').replaceAll('Nashik', 'नासिक');
+      if (market.contains('Nagpur')) return market.replaceAll('Nagpur', 'नागपुर');
+      if (market.contains('Kolhapur')) return market.replaceAll('Kolhapur', 'कोल्हापुर');
+      if (market.contains('Solapur')) return market.replaceAll('Solapur', 'सोलापुर');
+      if (market.contains('Akola')) return market.replaceAll('Akola', 'अकोला');
+      if (market.contains('Amarawati') || market.contains('Amravati')) return market.replaceAll('Amarawati', 'अमरावती').replaceAll('Amravati', 'अमरावती');
+      if (market.contains('Mumbai')) return market.replaceAll('Mumbai', 'मुंबई');
+      if (market.contains('Lasalgaon')) return market.replaceAll('Lasalgaon', 'लासलगाँव');
+    } else if (isMarathi) {
+      if (market.contains('Jalgaon')) return market.replaceAll('Jalgaon', 'जळगाव');
+      if (market.contains('Pune')) return market.replaceAll('Pune', 'पुणे');
+      if (market.contains('Nashik') || market.contains('Nasik')) return market.replaceAll('Nasik', 'नाशिक').replaceAll('Nashik', 'नाशिक');
+      if (market.contains('Nagpur')) return market.replaceAll('Nagpur', 'नागपूर');
+      if (market.contains('Kolhapur')) return market.replaceAll('Kolhapur', 'कोल्हापूर');
+      if (market.contains('Solapur')) return market.replaceAll('Solapur', 'सोलापूर');
+      if (market.contains('Akola')) return market.replaceAll('Akola', 'अकोला');
+      if (market.contains('Amarawati') || market.contains('Amravati')) return market.replaceAll('Amarawati', 'अमरावती').replaceAll('Amravati', 'अमरावती');
+      if (market.contains('Mumbai')) return market.replaceAll('Mumbai', 'मुंबई');
+      if (market.contains('Lasalgaon')) return market.replaceAll('Lasalgaon', 'लासलगाव');
+    }
+    return market;
+  }
+
+  String translateVariety(String variety) {
+    if (isHindi) {
+      switch (variety.toLowerCase().trim()) {
+        case 'other': return 'अन्य';
+        case 'common': return 'सामान्य';
+        case 'local': return 'स्थानीय';
+        case 'yellow': return 'पीला';
+        case 'red': return 'लाल';
+        case 'white': return 'सफेद';
+        default: return variety;
+      }
+    } else if (isMarathi) {
+      switch (variety.toLowerCase().trim()) {
+        case 'other': return 'इतर';
+        case 'common': return 'सामान्य';
+        case 'local': return 'स्थानिक';
+        case 'yellow': return 'पिवळा';
+        case 'red': return 'लाल';
+        case 'white': return 'पांढरा';
+        default: return variety;
+      }
+    }
+    return variety;
+  }
 
   // Dynamic Lookup
   String get(String key) {
